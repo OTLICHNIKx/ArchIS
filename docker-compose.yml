@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+
+  # База данных MongoDB
+  mongo:
+    image: mongo:7
+    container_name: soundwave-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"           # проброс порта наружу (для Compass)
+    volumes:
+      - mongo_data:/data/db    # данные сохраняются между перезапусками
+    environment:
+      MONGO_INITDB_DATABASE: soundwave
+
+  # Бэкенд Node.js
+  backend:
+    build: ./server
+    container_name: soundwave-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/soundwave   # "mongo" — имя сервиса выше
+      PORT: 5000
+      JWT_SECRET: твой_секрет
+    depends_on:
+      - mongo                  # бэкенд стартует только после MongoDB
+    volumes:
+      - ./server:/app          # hot-reload: изменения видны без пересборки
+      - /app/node_modules      # не перезаписывать node_modules с хоста
+
+  # Фронтенд (статика через nginx)
+  frontend:
+    build: ./frontend
+    container_name: soundwave-frontend
+    ports:
+      - "3000:80"
+
+volumes:
+  mongo_data:   # именованный volume для персистентности данных
