@@ -179,4 +179,26 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
-.idea
+
+# Зависимости — никогда не коммитим
+node_modules/
+server/node_modules/
+
+# Переменные окружения — содержат секреты
+.env
+server/.env
+
+# Логи
+*.log
+npm-debug.log*
+
+# Docker volumes (локальные данные)
+mongo_data/
+
+# OS файлы
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
