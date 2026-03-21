@@ -57,12 +57,12 @@ body {
   padding: 24px 20px 20px;
   font-family: 'Syne', sans-serif;
   font-weight: 800;
-  font-size: 19px;           /* или твой текущий размер */
+  font-size: 18px;
   letter-spacing: -0.5px;
 
   display: flex;
   align-items: center;
-  justify-content: center;   /* ← вот это главное */
+  justify-content: center;
   gap: 10px;
 
   border-bottom: 1px solid var(--border);
