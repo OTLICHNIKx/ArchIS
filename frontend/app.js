@@ -12,6 +12,12 @@
  * @param {'home'|'profile'} name — идентификатор страницы
  */
 function showPage(name) {
+  // Закрываем все модальные окна перед сменой страницы
+  document.querySelectorAll('.modal-overlay.open').forEach(modal => {
+    modal.classList.remove('open');
+  });
+
+  // дальше как было
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
 
@@ -161,3 +167,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Убеждаемся, что стартовая страница — главная
   showPage('home');
 });
+
+function openUploadWithReset() {
+  // закрываем ВСЕ открытые модалки (на случай, если открыта авторизация)
+  document.querySelectorAll('.modal-overlay.open').forEach(modal => {
+    modal.classList.remove('open');
+  });
+
+  // открываем загрузку
+  showModal('upload-modal');
+}
+
+function openAuthWithReset() {
+  // закрываем ВСЕ открытые модалки (включая upload-modal, если она была)
+  document.querySelectorAll('.modal-overlay.open').forEach(modal => {
+    modal.classList.remove('open');
+  });
+
+  // открываем авторизацию
+  showModal('auth-modal');
+}
