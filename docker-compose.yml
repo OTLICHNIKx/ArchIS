@@ -37,6 +37,8 @@ services:
     container_name: otlichnikmusic-frontend
     ports:
       - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
 
 volumes:
   mongo_data:   # именованный volume для персистентности данных
