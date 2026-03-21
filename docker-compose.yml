@@ -16,7 +16,7 @@ services:
 
   # Бэкенд Node.js
   backend:
-    build: ./server
+    build: ./backend
     container_name: otlichnikmusic-backend
     restart: unless-stopped
     ports:
@@ -28,7 +28,7 @@ services:
     depends_on:
       - mongo                  # бэкенд стартует только после MongoDB
     volumes:
-      - ./server:/app          # hot-reload: изменения видны без пересборки
+      - ./backend:/app          # hot-reload: изменения видны без пересборки
       - /app/node_modules      # не перезаписывать node_modules с хоста
 
   # Фронтенд (статика через nginx)

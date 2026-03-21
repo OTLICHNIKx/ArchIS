@@ -1,7 +1,7 @@
 {
-  "name": "soundwave-backend",
+  "name": "otlichnikmusic-backend",
   "version": "1.0.0",
-  "description": "SoundWave API server",
+  "description": "OtlichnikMusic API server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
