@@ -4,7 +4,7 @@
 // === РЕПОЗИТОРИИ ===
 const MongoTrackRepository = require('../../repositories/mongo/MongoTrackRepository');
 const MongoTagRepository   = require('../../repositories/mongo/MongoTagRepository');
-const InMemoryRepostRepository = require('../../repositories/mongo/MongoRepostRepository');
+const MongoRepostRepository = require('../../repositories/mongo/MongoRepostRepository');
 
 // === СЕРВИСЫ ===
 const LocalFileStorage        = require('./services/LocalFileStorage');
