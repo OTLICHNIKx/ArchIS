@@ -1,0 +1,10 @@
+$kind: http-request
+name: Archive Track
+description: Archive (hide) a track. Requires authentication.
+method: POST
+url: '{{baseUrl}}/api/artists/{{trackId}}/archive'
+order: 4000
+pathVariables:
+  - key: trackId
+    value: '{{trackId}}'
+    description: The track ID to archive

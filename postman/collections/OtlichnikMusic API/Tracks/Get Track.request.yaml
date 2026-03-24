@@ -1,0 +1,10 @@
+$kind: http-request
+name: Get Track
+description: Get a single track by ID. Requires authentication.
+method: GET
+url: '{{baseUrl}}/api/artists/tracks/{{trackId}}'
+order: 7000
+pathVariables:
+  - key: trackId
+    value: '{{trackId}}'
+    description: The track ID to retrieve

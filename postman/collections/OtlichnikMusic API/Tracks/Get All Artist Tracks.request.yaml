@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get All Artist Tracks
+description: Get all tracks belonging to the authenticated artist. Requires authentication.
+method: GET
+url: '{{baseUrl}}/api/artists/tracks'
+order: 6000

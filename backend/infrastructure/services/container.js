@@ -1,26 +1,28 @@
 // infrastructure/services/container.js
+// DI-контейнер — единственное место, где собираются все зависимости
+
 'use strict';
 
-// Репозитории
-const MongoTrackRepository = require('../repositories/mongo/MongoTrackRepository');
-const MongoTagRepository   = require('../repositories/mongo/MongoTagRepository');
+// === РЕПОЗИТОРИИ ===
+const MongoTrackRepository = require('../../repositories/mongo/MongoTrackRepository');
+const MongoTagRepository   = require('../../repositories/mongo/MongoTagRepository');
 
-// Сервисы
+// === СЕРВИСЫ ===
 const LocalFileStorage = require('./LocalFileStorage');
 const MockAudioService = require('./MockAudioService');
 
-// Use cases
-const makeCreateTrack         = require('../usecases/createTrack');
-const makePublishTrack        = require('../usecases/publishTrack');
-const makeArchiveTrack        = require('../usecases/archiveTrack');
-const makeDeleteTrack         = require('../usecases/deleteTrack');
-const makeGetArtistTracks     = require('../usecases/getArtistTracks');
-const makeGetTrack            = require('../usecases/getTrack');
-const makeUpdateTrackMetadata = require('../usecases/updateTrackMetadata');
-const makeGetPopularTags      = require('../usecases/getPopularTags');
-const makeUploadAudio         = require('../usecases/uploadAudio');
+// === USE CASES ===
+const makeCreateTrack         = require('../../usecases/createTrack');
+const makePublishTrack        = require('../../usecases/publishTrack');
+const makeArchiveTrack        = require('../../usecases/archiveTrack');
+const makeDeleteTrack         = require('../../usecases/deleteTrack');
+const makeGetArtistTracks     = require('../../usecases/getArtistTracks');
+const makeGetTrack            = require('../../usecases/getTrack');
+const makeUpdateTrackMetadata = require('../../usecases/updateTrackMetadata');
+const makeGetPopularTags      = require('../../usecases/getPopularTags');
+const makeUploadAudio         = require('../../usecases/uploadAudio');
 
-// Реализации
+// Создаём реализации
 const trackRepository = new MongoTrackRepository();
 const tagRepository   = new MongoTagRepository();
 const fileStorage     = new LocalFileStorage();

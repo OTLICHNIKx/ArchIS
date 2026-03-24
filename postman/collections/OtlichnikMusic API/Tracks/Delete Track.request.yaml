@@ -1,0 +1,10 @@
+$kind: http-request
+name: Delete Track
+description: Permanently delete a track. Requires authentication.
+method: DELETE
+url: '{{baseUrl}}/api/artists/tracks/{{trackId}}'
+order: 5000
+pathVariables:
+  - key: trackId
+    value: '{{trackId}}'
+    description: The track ID to delete

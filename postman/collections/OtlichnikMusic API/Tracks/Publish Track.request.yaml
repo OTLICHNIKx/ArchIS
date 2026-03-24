@@ -1,0 +1,10 @@
+$kind: http-request
+name: Publish Track
+description: Publish a track (send for processing). Requires authentication.
+method: POST
+url: '{{baseUrl}}/api/artists/{{trackId}}/publish'
+order: 3000
+pathVariables:
+  - key: trackId
+    value: '{{trackId}}'
+    description: The track ID to publish

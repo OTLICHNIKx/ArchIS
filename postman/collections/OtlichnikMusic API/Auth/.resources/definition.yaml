@@ -1,0 +1,4 @@
+$kind: collection
+name: Auth
+description: User authentication endpoints - registration, login, and profile retrieval.
+order: 1000

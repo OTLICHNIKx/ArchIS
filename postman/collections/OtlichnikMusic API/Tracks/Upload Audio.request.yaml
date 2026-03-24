@@ -1,0 +1,17 @@
+$kind: http-request
+name: Upload Audio
+description: Upload an audio file to an existing track. Requires authentication. Use form-data with field name "audio".
+method: POST
+url: '{{baseUrl}}/api/artists/{{trackId}}/audio'
+order: 2000
+pathVariables:
+  - key: trackId
+    value: '{{trackId}}'
+    description: The track ID to upload audio to
+body:
+  type: formdata
+  content:
+    - key: audio
+      type: file
+      src: ''
+      description: Audio file to upload (mp3, wav, etc.)

@@ -1,0 +1,22 @@
+$kind: collection
+name: OtlichnikMusic API
+description: |-
+  API collection for OtlichnikMusic - a music platform backend.
+  
+  ## Authentication
+  Most endpoints require Bearer token authentication. Use the Login or Register endpoints to obtain a token, then set the `authToken` variable.
+  
+  ## Resources
+  - **Auth**: User registration, login, and profile
+  - **Tracks**: CRUD operations for artist tracks
+  - **Tags**: Popular tags discovery
+  - **Health**: Server health check
+variables:
+  - key: baseUrl
+    value: 'http://localhost:5000'
+    description: Base URL for the API server
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{authToken}}'
