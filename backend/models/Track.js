@@ -1,19 +1,23 @@
+// backend/models/Track.js
 const mongoose = require('mongoose');
+const { TrackStatus } = require('../domain/Track');
 
 const trackSchema = new mongoose.Schema({
-  title:       { type: String, required: true, trim: true },
-  artist:      { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  audioUrl:    { type: String, required: true },     // путь к файлу
-  coverUrl:    { type: String, default: null },
-  genre:       { type: String, default: 'Other' },
-  bpm:         { type: Number, default: null },
-  tags:        [String],
-  description: { type: String, default: '' },
-  duration:    { type: Number, default: 0 },         // секунды
-  plays:       { type: Number, default: 0 },
-  likes:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  isPublic:    { type: Boolean, default: true },
-  allowDownload: { type: Boolean, default: false },
+  title:        { type: String, required: true, trim: true },
+  artistId:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  audioUrl:     { type: String, default: null },
+  coverUrl:     { type: String, default: null },
+  genre:        { type: String, required: true },
+  tags:         { type: [String], default: [] },
+  description:  { type: String, default: '' },
+  duration:     { type: Number, required: true },
+  isPublic:     { type: Boolean, default: true },
+  plays:        { type: Number, default: 0 },
+  status: {
+    type:    String,
+    enum:    Object.values(TrackStatus),
+    default: TrackStatus.DRAFT,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Track', trackSchema);
