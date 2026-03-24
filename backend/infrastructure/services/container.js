@@ -1,17 +1,15 @@
-// infrastructure/container.js
-// DI-контейнер — единственное место где знают о конкретных реализациях
-
+// infrastructure/services/container.js
 'use strict';
 
-// Репозитории (реализации)
+// Репозитории
 const MongoTrackRepository = require('../repositories/mongo/MongoTrackRepository');
 const MongoTagRepository   = require('../repositories/mongo/MongoTagRepository');
 
-// Сервисы (реализации)
-const LocalFileStorage  = require('./services/LocalFileStorage');
-const MockAudioService  = require('./services/MockAudioService');
+// Сервисы
+const LocalFileStorage = require('./LocalFileStorage');
+const MockAudioService = require('./MockAudioService');
 
-// Use cases (фабрики)
+// Use cases
 const makeCreateTrack         = require('../usecases/createTrack');
 const makePublishTrack        = require('../usecases/publishTrack');
 const makeArchiveTrack        = require('../usecases/archiveTrack');
@@ -20,14 +18,15 @@ const makeGetArtistTracks     = require('../usecases/getArtistTracks');
 const makeGetTrack            = require('../usecases/getTrack');
 const makeUpdateTrackMetadata = require('../usecases/updateTrackMetadata');
 const makeGetPopularTags      = require('../usecases/getPopularTags');
+const makeUploadAudio         = require('../usecases/uploadAudio');
 
-// Создаём реализации
+// Реализации
 const trackRepository = new MongoTrackRepository();
 const tagRepository   = new MongoTagRepository();
 const fileStorage     = new LocalFileStorage();
 const audioService    = new MockAudioService();
 
-// Собираем use cases — инжектируем зависимости
+// Собираем use cases
 const container = {
   createTrack:         makeCreateTrack({ trackRepository, tagRepository }),
   publishTrack:        makePublishTrack({ trackRepository, audioService }),
@@ -37,6 +36,7 @@ const container = {
   getTrack:            makeGetTrack({ trackRepository }),
   updateTrackMetadata: makeUpdateTrackMetadata({ trackRepository }),
   getPopularTags:      makeGetPopularTags({ tagRepository }),
+  uploadAudio:         makeUploadAudio({ trackRepository, fileStorage }),
 };
 
 module.exports = container;
