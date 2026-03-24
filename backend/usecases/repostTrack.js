@@ -1,11 +1,11 @@
-// backend/usecases/repostSong.js
+// backend/usecases/RepostTrack.js
 'use strict';
 
 const { validateRepost } = require('../domain/Repost');
 
-function makeRepostSong({ trackRepository, repostRepository, notificationService }) {
+function makeRepostTrack({ trackRepository, repostRepository, notificationService }) {
 
-  return async function repostSong(songId, userId) {
+  return async function RepostTrack(songId, userId) {
 
     // 1. Проверяем, существует ли трек
     const track = await trackRepository.findById(songId);
@@ -66,4 +66,4 @@ function makeRepostSong({ trackRepository, repostRepository, notificationService
   };
 }
 
-module.exports = makeRepostSong;
+module.exports = makeRepostTrack;

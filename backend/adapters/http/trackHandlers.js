@@ -147,12 +147,12 @@ const getArtist = async (req, res) => {
 };
 
 // Репост трека в свой профиль
-const repostSong = async (req, res) => {
+const RepostTrack = async (req, res) => {
   try {
     const userId = req.user._id;           // берётся из middleware protect
     const { trackId } = req.params;        // songId = trackId
 
-    const result = await container.repostSong(trackId, userId);
+    const result = await container.RepostTrack(trackId, userId);
     res.status(201).json(result);
   } catch (error) {
     handleError(res, error);
@@ -170,5 +170,5 @@ module.exports = {
   updateTrackMetadata,
   getPopularTags,
   getArtist,
-  repostSong
+  RepostTrack
 };

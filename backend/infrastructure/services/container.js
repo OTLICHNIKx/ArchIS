@@ -21,7 +21,7 @@ const makeGetTrack            = require('../../usecases/getTrack');
 const makeUpdateTrackMetadata = require('../../usecases/updateTrackMetadata');
 const makeGetPopularTags      = require('../../usecases/getPopularTags');
 const makeUploadAudio         = require('../../usecases/uploadAudio');
-const makeRepostSong          = require('../../usecases/repostSong');
+const makeRepostTrack          = require('../../usecases/RepostTrack');
 const makeGetArtist           = require('../../usecases/getArtist');
 
 // Создаём реализации
@@ -43,7 +43,7 @@ const container = {
   updateTrackMetadata: makeUpdateTrackMetadata({ trackRepository }),
   getPopularTags:      makeGetPopularTags({ tagRepository }),
   uploadAudio:         makeUploadAudio({ trackRepository, fileStorage }),        // ← fileStorage не null!
-  repostSong:          makeRepostSong({ trackRepository, repostRepository, notificationService }),
+  RepostTrack:          makeRepostTrack({ trackRepository, repostRepository, notificationService }),
   getArtist:           makeGetArtist({ trackRepository }),
 };
 
