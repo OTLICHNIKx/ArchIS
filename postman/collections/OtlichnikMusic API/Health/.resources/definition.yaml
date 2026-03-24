@@ -1,4 +1,0 @@
-$kind: collection
-name: Health
-description: Server health check endpoint.
-order: 4000

@@ -1,6 +1,0 @@
-$kind: http-request
-name: Get Popular Tags
-description: Get the most popular tags. Public endpoint - no authentication required.
-method: GET
-url: '{{baseUrl}}/api/tags/popular'
-order: 1000

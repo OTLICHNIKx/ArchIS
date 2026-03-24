@@ -1,4 +1,0 @@
-$kind: collection
-name: Tags
-description: Tag discovery endpoints.
-order: 3000

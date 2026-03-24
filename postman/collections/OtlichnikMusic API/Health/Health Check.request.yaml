@@ -1,6 +1,0 @@
-$kind: http-request
-name: Health Check
-description: Check server health status. Public endpoint - no authentication required.
-method: GET
-url: '{{baseUrl}}/api/health'
-order: 1000

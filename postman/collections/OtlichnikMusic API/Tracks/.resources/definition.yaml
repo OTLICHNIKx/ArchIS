@@ -1,4 +1,0 @@
-$kind: collection
-name: Tracks
-description: Track management endpoints for artists - create, upload, publish, archive, and manage tracks.
-order: 2000
