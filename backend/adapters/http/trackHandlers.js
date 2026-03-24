@@ -133,6 +133,32 @@ const getPopularTags = async (req, res) => {
   }
 };
 
+// ==================== НОВЫЕ ХЕНДЛЕРЫ ДЛЯ ВОРКФЛОУ ИЗ ПРАКТИКИ 1 ====================
+
+// Получить карточку артиста + его публичные треки
+const getArtist = async (req, res) => {
+  try {
+    const { artistId } = req.params;
+    const result = await container.getArtist(artistId);
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
+// Репост трека в свой профиль
+const repostSong = async (req, res) => {
+  try {
+    const userId = req.user._id;           // берётся из middleware protect
+    const { trackId } = req.params;        // songId = trackId
+
+    const result = await container.repostSong(trackId, userId);
+    res.status(201).json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
 module.exports = {
   createTrack,
   uploadAudio,
@@ -143,4 +169,6 @@ module.exports = {
   getTrack,
   updateTrackMetadata,
   getPopularTags,
+  getArtist,
+  repostSong
 };
