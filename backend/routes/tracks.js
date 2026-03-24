@@ -12,6 +12,8 @@ const {
   getTrack,
   updateTrackMetadata,
   getPopularTags,
+  getArtist,
+  RepostTrack
 } = require('../adapters/http/trackHandlers');
 
 const { protect } = require('../middleware/auth');
@@ -26,5 +28,8 @@ router.get('/artists/tracks', protect, getArtistTracks);                 // 6. �
 router.get('/artists/tracks/:trackId', protect, getTrack);               // 7. Один трек
 router.patch('/artists/tracks/:trackId', protect, updateTrackMetadata);  // 8. Обновить метаданные
 router.get('/tags/popular', getPopularTags);                             // 9. Популярные теги
+router.get('/artists/:artistId', getArtist); // Получить карточку артиста (публичный эндпоинт)
+router.post('/tracks/:trackId/repost', protect, RepostTrack); // Репост трека (требует авторизации)
+
 
 module.exports = router;
