@@ -4,23 +4,23 @@
 'use strict';
 
 // === РЕПОЗИТОРИИ ===
-const MongoTrackRepository = require('../../repositories/mongo/MongoTrackRepository');
-const MongoTagRepository   = require('../../repositories/mongo/MongoTagRepository');
+const MongoTrackRepository = require('../repositories/mongo/MongoTrackRepository');
+const MongoTagRepository   = require('../repositories/mongo/MongoTagRepository');
 
 // === СЕРВИСЫ ===
-const LocalFileStorage = require('./LocalFileStorage');
-const MockAudioService = require('./MockAudioService');
+const LocalFileStorage = require('./services/LocalFileStorage');
+const MockAudioService = require('./services/MockAudioService');
 
 // === USE CASES ===
-const makeCreateTrack         = require('../../usecases/createTrack');
-const makePublishTrack        = require('../../usecases/publishTrack');
-const makeArchiveTrack        = require('../../usecases/archiveTrack');
-const makeDeleteTrack         = require('../../usecases/deleteTrack');
-const makeGetArtistTracks     = require('../../usecases/getArtistTracks');
-const makeGetTrack            = require('../../usecases/getTrack');
-const makeUpdateTrackMetadata = require('../../usecases/updateTrackMetadata');
-const makeGetPopularTags      = require('../../usecases/getPopularTags');
-const makeUploadAudio         = require('../../usecases/uploadAudio');
+const makeCreateTrack         = require('../usecases/createTrack');
+const makePublishTrack        = require('../usecases/publishTrack');
+const makeArchiveTrack        = require('../usecases/archiveTrack');
+const makeDeleteTrack         = require('../usecases/deleteTrack');
+const makeGetArtistTracks     = require('../usecases/getArtistTracks');
+const makeGetTrack            = require('../usecases/getTrack');
+const makeUpdateTrackMetadata = require('../usecases/updateTrackMetadata');
+const makeGetPopularTags      = require('../usecases/getPopularTags');
+const makeUploadAudio         = require('../usecases/uploadAudio');
 
 // Создаём реализации
 const trackRepository = new MongoTrackRepository();

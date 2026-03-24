@@ -1,7 +1,7 @@
 // adapters/http/trackHandlers.js
 // HTTP-адаптеры — единственное место, где Express встречается с Use Cases
 
-const container = require('../../infrastructure/services/container');
+const container = require('../../infrastructure/container');
 const uploadMiddleware = require('../../middleware/upload');
 const { protect } = require('../../middleware/auth');
 

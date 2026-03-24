@@ -17,8 +17,8 @@ const {
 const { protect } = require('../middleware/auth');
 
 // === ЭНДПОИНТЫ ===
-router.post('/artists/:artistId/tracks', protect, createTrack);           // 1. Создать метаданные
-router.post('/artists/:trackId/audio', protect, uploadAudio);            // 2. Загрузить аудио
+router.post('/artists/:artistId/tracks', protect, createTrack);          // 1. Создать метаданные
+router.post('/artists/:trackId/audio', uploadAudio);                     // 2. Загрузить аудио
 router.post('/artists/:trackId/publish', protect, publishTrack);         // 3. Опубликовать
 router.post('/artists/:trackId/archive', protect, archiveTrack);         // 4. Архивировать
 router.delete('/artists/tracks/:trackId', protect, deleteTrack);         // 5. Удалить
