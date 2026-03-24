@@ -4,7 +4,7 @@
 // === РЕПОЗИТОРИИ ===
 const MongoTrackRepository = require('../../repositories/mongo/MongoTrackRepository');
 const MongoTagRepository   = require('../../repositories/mongo/MongoTagRepository');
-const InMemoryRepostRepository = require('../../repositories/in_memory/InMemoryRepostRepository');
+const InMemoryRepostRepository = require('../../repositories/mongo/MongoRepostRepository');
 
 // === СЕРВИСЫ ===
 const MockNotificationService = require('./MockNotificationService');
@@ -26,7 +26,7 @@ const makeGetArtist           = require('../../usecases/getArtist');
 // Создаём реализации
 const trackRepository = new MongoTrackRepository();
 const tagRepository   = new MongoTagRepository();
-const repostRepository = new InMemoryRepostRepository();
+const repostRepository = new MongoRepostRepository();
 const notificationService = new MockNotificationService();
 
 // Собираем use cases
