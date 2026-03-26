@@ -1,19 +1,23 @@
-const { createYoga } = require('graphql-yoga');
-const typeDefs = require('../graphql/schema');
-const resolvers = require('../graphql/resolvers');
-const { protect } = require('../../middleware/auth'); // твой существующий auth middleware
+const { createYoga, createSchema } = require('graphql-yoga');
+const typeDefs = require('../../graphql/schema');
+const resolvers = require('../../graphql/resolvers');
+const { protect } = require('../../middleware/auth');
 
-// Создаём Yoga-сервер
+const schema = createSchema({
+  typeDefs,
+  resolvers,
+});
+
 const yoga = createYoga({
-  schema: { typeDefs, resolvers },
+  schema,
   context: async ({ req }) => {
-    // Прогоняем protect middleware, чтобы заполнить req.user
+    // Прогоняем auth middleware
     await new Promise((resolve) => {
       protect(req, { status: () => ({ json: () => {} }) }, resolve);
     });
     return { user: req.user };
   },
-  graphiql: true, // Playground будет доступен
+  graphiql: true,
 });
 
 module.exports = yoga;
