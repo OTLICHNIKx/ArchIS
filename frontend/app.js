@@ -210,3 +210,49 @@ function openAuthWithReset() {
   // открываем авторизацию
   showModal('auth-modal');
 }
+
+async function handleRegister(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('reg-username').value;
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+
+  try {
+    const data = await apiRequest('/auth/register', 'POST', {
+      username,
+      email,
+      password
+    });
+
+    localStorage.setItem('token', data.token);
+
+    alert('Регистрация успешна!');
+    closeModal('auth-modal');
+
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+
+  try {
+    const data = await apiRequest('/auth/login', 'POST', {
+      email,
+      password
+    });
+
+    localStorage.setItem('token', data.token);
+
+    alert('Вы вошли!');
+    closeModal('auth-modal');
+
+  } catch (err) {
+    alert(err.message);
+  }
+}
