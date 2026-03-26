@@ -1,6 +1,8 @@
 // backend/index.js
 // ТОЧКА ВХОДА приложения
 
+const graphqlAdapter = require('./adapters/http/graphqlAdapter');
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -29,6 +31,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.use('/graphql', graphqlAdapter);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(` Сервер запущен на порту ${PORT}`);
