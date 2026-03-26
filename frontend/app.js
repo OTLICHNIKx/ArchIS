@@ -256,3 +256,14 @@ async function handleLogin(e) {
     alert(err.message);
   }
 }
+
+async function loadMe() {
+  try {
+    const user = await apiRequest('/auth/me');
+    console.log('User:', user);
+  } catch {
+    console.log('Не авторизован');
+  }
+}
+
+loadMe();
