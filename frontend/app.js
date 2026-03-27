@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════
-   app.js — OtlichnikMusic UI Logic (ФИНАЛЬНЫЙ MERGE)
+   app.js — OtlichnikMusic UI Logic (ИСПРАВЛЕННАЯ ВЕРСИЯ)
    ══════════════════════════════════════════════ */
 
 // ================= API =================
@@ -28,7 +28,7 @@ let currentUser = null;
 let selectedFile = null;
 
 /* ──────────────────────────────────────────────
-   ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ
+   ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (главное исправление)
    ────────────────────────────────────────────── */
 async function loadCurrentUser() {
   const token = localStorage.getItem('token');
@@ -38,33 +38,42 @@ async function loadCurrentUser() {
     const user = await apiRequest('/auth/me');
     currentUser = user;
     console.log('✅ Текущий пользователь загружен:', currentUser);
-    renderProfileHeader();
     renderProfileTracks();
     updateTopbarAuth();
   } catch (err) {
-    console.warn('Токен устарел');
+    console.warn('Не удалось загрузить пользователя (токен устарел?)');
     localStorage.removeItem('token');
   }
+  renderProfileHeader();
 }
 
 /* ──────────────────────────────────────────────
    НАВИГАЦИЯ И МОДАЛКИ
    ────────────────────────────────────────────── */
 function showPage(name) {
+  // Закрываем все модалки
   document.querySelectorAll('.modal-overlay.open').forEach(modal => modal.classList.remove('open'));
+
+  // Снимаем active со всех страниц
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 
+  // Активируем нужную страницу
   const pageElement = document.getElementById('page-' + name);
-  if (pageElement) pageElement.classList.add('active');
+  if (pageElement) {
+    pageElement.classList.add('active');
+  }
 
+  // Специальная логика для профиля
   if (name === 'profile') {
     renderProfilePage();
   }
 
+  // Обновляем активную кнопку в демо-навигаторе
   document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('nav-' + name);
   if (btn) btn.classList.add('active');
 
+  // Обновляем топбар (кнопки Войти/Регистрация → Аватар + Выйти)
   updateTopbarAuth();
 }
 
@@ -78,29 +87,7 @@ function closeModal(id) {
   if (modal) modal.classList.remove('open');
 }
 
-/* ──────────────────────────────────────────────
-   ЗАКРЫТИЕ МОДАЛКИ ТОЛЬКО ПО КРЕСТИКУ
-   ────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('mousedown', function(e) {
-      overlay.dataset.mouseDownTarget = e.target;
-    });
-
-    overlay.addEventListener('mouseup', function(e) {
-      if (overlay.dataset.mouseDownTarget === overlay && e.target === overlay) {
-        overlay.classList.remove('open');
-      }
-      delete overlay.dataset.mouseDownTarget;
-    });
-  });
-
-  document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', e => e.stopPropagation());
-  });
-});
-
-function switchTab(tab) {
+function switchTab(tab) { /* оставил твой оригинальный код */
   const tabs = document.querySelectorAll('#auth-tabs .tab');
   tabs[0].classList.toggle('active', tab === 'login');
   tabs[1].classList.toggle('active', tab === 'register');
@@ -112,6 +99,7 @@ function switchTab(tab) {
    АВТОРИЗАЦИЯ
    ────────────────────────────────────────────── */
 function clearAuthForms() {
+  // Очищаем все поля
   document.getElementById('reg-username').value = '';
   document.getElementById('reg-email').value = '';
   document.getElementById('reg-password').value = '';
@@ -119,33 +107,28 @@ function clearAuthForms() {
   document.getElementById('login-password').value = '';
 }
 
+
 async function handleRegister(e) {
   e.preventDefault();
-  let username = document.getElementById('reg-username').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
 
-  if (username.startsWith('@')) username = username.substring(1);
-
-  if (!username) {
-    showToast('Введите имя пользователя', 'error');
-    return;
-  }
-
   try {
     const data = await apiRequest('/auth/register', 'POST', { username, email, password });
-
     localStorage.setItem('token', data.token);
     currentUser = data;
 
     clearAuthForms();
     closeModal('auth-modal');
+    showToast(`Добро пожаловать, ${data.username}! 🎉`, 'success');
 
-    showToast(`Добро пожаловать, @${data.username}! 🎉`, 'success');
-
-    updateTopbarAuth();
     renderProfileHeader();
     renderProfileTracks();
+    // Если сейчас открыт профиль — обновляем его содержимое
+    if (document.getElementById('page-profile').classList.contains('active')) {
+      renderProfilePage();
+    }
 
   } catch (err) {
     showToast(err.message, 'error');
@@ -159,18 +142,18 @@ async function handleLogin(e) {
 
   try {
     const data = await apiRequest('/auth/login', 'POST', { email, password });
-
     localStorage.setItem('token', data.token);
     currentUser = data;
 
     clearAuthForms();
     closeModal('auth-modal');
-
-    showToast(`С возвращением, @${data.username}! 👋`, 'success');
-
-    updateTopbarAuth();
+    showToast(`С возвращением, ${data.username}! 👋`, 'success')
     renderProfileHeader();
     renderProfileTracks();
+    // Если сейчас открыт профиль — обновляем его содержимое
+    if (document.getElementById('page-profile').classList.contains('active')) {
+      renderProfilePage();
+    }
 
   } catch (err) {
     showToast(err.message, 'error');
@@ -181,12 +164,14 @@ function logout() {
   localStorage.removeItem('token');
   currentUser = null;
   updateTopbarAuth();
-  showPage('home');
+  if (document.getElementById('page-profile').classList.contains('active')) {
+      renderProfilePage();
+    }
   showToast('Вы вышли из аккаунта', 'success');
 }
 
 /* ──────────────────────────────────────────────
-   ЗАГРУЗКА ТРЕКА
+   ЗАГРУЗКА ТРЕКА (с защитой от undefined)
    ────────────────────────────────────────────── */
 function initUploadModal() {
   const dropZone = document.getElementById('drop-zone');
@@ -215,25 +200,45 @@ function handleFile(file) {
 }
 
 async function handleTrackUpload() {
-  if (!currentUser || !currentUser._id) return showToast('Сначала войди в аккаунт!', 'error');
-  if (!selectedFile) return showToast('Выбери аудиофайл!', 'error');
+  if (!currentUser || !currentUser._id) {
+    return showToast('Сначала войди в аккаунт!', 'error');
+  }
+  if (!selectedFile) {
+    return showToast('Выбери аудиофайл!', 'error');
+  }
 
-  const title = document.getElementById('track-title').value.trim();
-  const genre = document.getElementById('track-genre').value;
-  const tagsInput = document.getElementById('track-tags').value;
+  const title       = document.getElementById('track-title').value.trim();
+  const genre       = document.getElementById('track-genre').value;
+  const tagsInput   = document.getElementById('track-tags').value;
   const description = document.getElementById('track-desc').value.trim();
-  const duration = parseInt(document.getElementById('track-duration').value);
+  const duration    = parseInt(document.getElementById('track-duration').value);
 
-  if (!title || !genre || !duration) return showToast('Заполни название, жанр и длительность!', 'error');
+  if (!title || !genre || !duration) {
+    return showToast('Заполни название, жанр и длительность!', 'error');
+  }
 
   const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
 
   try {
-    const trackResponse = await apiRequest(`/artists/${currentUser._id}/tracks`, 'POST', { title, genre, tags, description, duration });
+    console.log('🚀 Создаём трек для userId:', currentUser._id);
+
+    const trackResponse = await apiRequest(`/artists/${currentUser._id}/tracks`, 'POST', {
+      title, genre, tags, description, duration
+    });
+
+    console.log('✅ Полный ответ от createTrack:', trackResponse);
+
+    // ←←← ИСПРАВЛЕНИЕ ЗДЕСЬ
     const trackId = trackResponse.track_id || trackResponse._id || trackResponse.id;
 
-    if (!trackId) return showToast('Ошибка: сервер не вернул ID трека', 'error');
+    if (!trackId) {
+      console.error('❌ В ответе нет ID трека!', trackResponse);
+      return showToast('Ошибка: сервер не вернул ID трека', 'error');
+    }
 
+    console.log('✅ Трек создан, ID:', trackId);
+
+    // 2. Загружаем аудиофайл
     const formData = new FormData();
     formData.append('audio', selectedFile);
 
@@ -243,33 +248,49 @@ async function handleTrackUpload() {
       body: formData
     });
 
-    if (!uploadRes.ok) throw new Error('Ошибка загрузки файла');
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      console.error('Ошибка загрузки файла:', errText);
+      throw new Error('Ошибка загрузки файла');
+    }
 
+    // 3. Публикуем трек
     await apiRequest(`/artists/${trackId}/publish`, 'POST');
 
     showToast('🎵 Трек успешно загружен и опубликован!', 'success');
     closeModal('upload-modal');
     selectedFile = null;
     renderProfileTracks();
+
+    showToast('🎵 Трек успешно загружен и опубликован!', 'success');
+    closeModal('upload-modal');
+    selectedFile = null;
+    renderProfileTracks();
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка в handleTrackUpload:', err);
     showToast(err.message || 'Ошибка загрузки трека', 'error');
   }
 }
 
 /* ──────────────────────────────────────────────
-   TOPBAR + ПРОФИЛЬ
+   ОБНОВЛЕНИЕ TOPBAR (кнопки авторизации)
    ────────────────────────────────────────────── */
 function updateTopbarAuth() {
   const container = document.getElementById('topbar-auth');
   if (!container) return;
 
   if (currentUser) {
+    // Пользователь залогинен
     container.innerHTML = `
-      <div onclick="logout()" class="btn btn-ghost" style="cursor:pointer; margin-right:12px;">Выйти</div>
-      <div class="avatar" onclick="showPage('profile')">${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}</div>
+      <div onclick="logout()" class="btn btn-ghost" style="cursor:pointer; margin-right:12px;">
+        Выйти
+      </div>
+      <div class="avatar" onclick="showPage('profile')">
+        ${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}
+      </div>
     `;
   } else {
+    // Пользователь не залогинен
     container.innerHTML = `
       <button class="btn btn-ghost" onclick="showModal('auth-modal')">Войти</button>
       <button class="btn btn-accent" onclick="showModal('auth-modal')">Регистрация</button>
@@ -277,34 +298,51 @@ function updateTopbarAuth() {
   }
 }
 
+/* ──────────────────────────────────────────────
+   РЕНДЕР ШАПКИ ПРОФИЛЯ (реальные данные)
+   ────────────────────────────────────────────── */
 function renderProfileHeader() {
   if (!currentUser) return;
 
+  // Защита от null
   const nameEl = document.getElementById('profile-name');
   const handleEl = document.getElementById('profile-handle');
   const avatarEl = document.getElementById('profile-avatar');
   const avatarTop = document.getElementById('profile-avatar-top');
 
   if (nameEl) nameEl.textContent = currentUser.username || 'Пользователь';
-  if (handleEl) handleEl.innerHTML = `@${(currentUser.username || 'user').replace('@','')} <span style="color:var(--text3)">· Москва, RU</span>`;
+  if (handleEl) handleEl.innerHTML = `
+    @${(currentUser.username || 'user').replace('@','')}
+    <span style="color:var(--text3)">· Москва, RU</span>
+  `;
   if (avatarEl) avatarEl.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
   if (avatarTop) avatarTop.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
+
+  const actions = document.getElementById('profile-actions');
+  if (actions) {
+    actions.innerHTML = `
+      <button onclick="alert('Редактирование профиля в разработке')" class="btn btn-outline-accent btn-ghost">Редактировать профиль</button>
+    `;
+  }
 }
 
 /* ──────────────────────────────────────────────
-   РЕНДЕР ПРОФИЛЯ
+   РЕНДЕР ПРОФИЛЯ (с проверкой авторизации)
    ────────────────────────────────────────────── */
 function renderProfilePage() {
   const content = document.getElementById('profile-content');
   if (!content) return;
 
   if (!currentUser) {
+    // Не авторизован — пустая страница
     content.innerHTML = `
       <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; height:100%; color:var(--text2); text-align:center; padding:40px;">
         <div style="font-size:72px; margin-bottom:24px; opacity:0.25;">👤</div>
-        <div style="font-family:'Syne',sans-serif; font-size:28px; font-weight:700; color:var(--text); margin-bottom:16px;">Вы не авторизованы</div>
+        <div style="font-family:'Syne',sans-serif; font-size:28px; font-weight:700; color:var(--text); margin-bottom:16px;">
+          Вы не авторизованы
+        </div>
         <div style="font-size:16px; max-width:380px; line-height:1.6; margin-bottom:40px;">
-          Чтобы просматривать свой профиль и загружать треки — войдите или зарегистрируйтесь.
+          Чтобы просматривать свой профиль, загружать треки и взаимодействовать с другими артистами — войдите или зарегистрируйтесь.
         </div>
         <button onclick="openAuthWithReset()" class="btn btn-accent" style="padding:14px 36px; font-size:15px;">
           Войти / Зарегистрироваться
@@ -314,6 +352,7 @@ function renderProfilePage() {
     return;
   }
 
+  // Авторизован — нормальный профиль
   content.innerHTML = `
     <div class="topbar">
       <button class="btn btn-ghost" style="gap:6px;display:flex;align-items:center;" onclick="showPage('home')">
@@ -364,6 +403,7 @@ function renderProfilePage() {
     </div>
   `;
 
+  // Теперь безопасно обновляем шапку
   renderProfileHeader();
   renderProfileTracks();
 }
@@ -371,7 +411,7 @@ function renderProfilePage() {
 /* ──────────────────────────────────────────────
    ПРОФИЛЬ + ВОЛНЫ + TOAST
    ────────────────────────────────────────────── */
-async function renderProfileTracks() {
+async function renderProfileTracks() { /* твой оригинальный код */
   const container = document.getElementById('profile-tracks');
   if (!container || !currentUser) return;
 
@@ -394,14 +434,14 @@ async function renderProfileTracks() {
   } catch (e) { console.log('Нет треков'); }
 }
 
-function generateWave(id, count = 40) {
+function generateWave(id, count = 40) { /* твой оригинальный код */
   const el = document.getElementById(id);
   if (!el) return;
   const heights = Array.from({ length: count }, () => 4 + Math.random() * 22);
   el.innerHTML = heights.map(h => `<div class="bar" style="height:${h}px"></div>`).join('');
 }
 
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success') { /* твой оригинальный код */
   const toast = document.getElementById('toast');
   const text = document.getElementById('toast-text');
   const iconHTML = type === 'success'
@@ -420,7 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
   showPage('home');
   initUploadModal();
   generateWave('wave1'); generateWave('wave2'); generateWave('wave3'); generateWave('wave4');
-  loadCurrentUser();
+
+  loadCurrentUser();   // ←←← главное исправление
 });
 
 /* Глобальные функции для onclick в HTML */
