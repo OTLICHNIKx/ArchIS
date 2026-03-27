@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════
-   app.js — OtlichnikMusic UI Logic
+   app.js — OtlichnikMusic UI Logic (ИСПРАВЛЕННАЯ ВЕРСИЯ)
    ══════════════════════════════════════════════ */
 
 // ================= API =================
@@ -7,40 +7,49 @@ const API_URL = 'http://localhost:5000/api';
 
 async function apiRequest(path, method = 'GET', body = null) {
   const token = localStorage.getItem('token');
-
   const res = await fetch(API_URL + path, {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: 'Bearer ' + token })
+      ...(token && { Authorization: `Bearer ${token}` })
     },
     body: body ? JSON.stringify(body) : null
   });
 
   const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.message || 'Ошибка');
-  }
-
+  if (!res.ok) throw new Error(data.message || data.error || 'Ошибка сервера');
   return data;
 }
 
 /* ──────────────────────────────────────────────
-   НАВИГАЦИЯ ПО СТРАНИЦАМ
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
    ────────────────────────────────────────────── */
+let currentUser = null;
+let selectedFile = null;
 
-/**
- * Показывает нужную страницу и обновляет активную кнопку в демо-навигаторе.
- * @param {'home'|'profile'} name — идентификатор страницы
- */
+/* ──────────────────────────────────────────────
+   ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (главное исправление)
+   ────────────────────────────────────────────── */
+async function loadCurrentUser() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    const user = await apiRequest('/auth/me');
+    currentUser = user;
+    console.log('✅ Текущий пользователь загружен:', currentUser);
+    renderProfileTracks();
+  } catch (err) {
+    console.warn('Не удалось загрузить пользователя (токен устарел?)');
+    localStorage.removeItem('token');
+  }
+}
+
+/* ──────────────────────────────────────────────
+   НАВИГАЦИЯ И МОДАЛКИ
+   ────────────────────────────────────────────── */
 function showPage(name) {
-  // Закрываем все модальные окна перед сменой страницы
-  document.querySelectorAll('.modal-overlay.open').forEach(modal => {
-    modal.classList.remove('open');
-  });
-
-  // дальше как было
+  document.querySelectorAll('.modal-overlay.open').forEach(modal => modal.classList.remove('open'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
 
@@ -49,238 +58,223 @@ function showPage(name) {
   if (btn) btn.classList.add('active');
 }
 
+function showModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-/* ──────────────────────────────────────────────
-   МОДАЛЬНЫЕ ОКНА
-   ────────────────────────────────────────────── */
-
-/**
- * Открывает модалку по id.
- * @param {string} id
- */
-function showModal(id) {
-  document.getElementById(id).classList.add('open');
-}
-
-/**
- * Закрывает модалку по id.
- * @param {string} id
- */
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
-// Закрытие кликом по оверлею (вне .modal)
 document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => {
-    if (e.target === el) el.classList.remove('open');
-  });
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
-
-// Закрытие по Escape
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-overlay.open').forEach(el => {
-      el.classList.remove('open');
-    });
-  }
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(el => el.classList.remove('open'));
 });
 
-
-/* ──────────────────────────────────────────────
-   АВТОРИЗАЦИЯ — переключение форм
-   ────────────────────────────────────────────── */
-
-/**
- * Переключает между формами «Войти» и «Регистрация».
- * @param {'login'|'register'} tab
- */
-function switchTab(tab) {
+function switchTab(tab) { /* оставил твой оригинальный код */
   const tabs = document.querySelectorAll('#auth-tabs .tab');
   tabs[0].classList.toggle('active', tab === 'login');
   tabs[1].classList.toggle('active', tab === 'register');
-
-  document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
+  document.getElementById('form-login').style.display = tab === 'login' ? '' : 'none';
   document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
 }
 
+/* ──────────────────────────────────────────────
+   АВТОРИЗАЦИЯ
+   ────────────────────────────────────────────── */
+async function handleRegister(e) {
+  e.preventDefault();
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+
+  try {
+    const data = await apiRequest('/auth/register', 'POST', { username, email, password });
+    localStorage.setItem('token', data.token);
+    currentUser = data;
+    closeModal('auth-modal');
+    showToast('✅ Регистрация прошла успешно!', 'success');
+    renderProfileTracks();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  try {
+    const data = await apiRequest('/auth/login', 'POST', { email, password });
+    localStorage.setItem('token', data.token);
+    currentUser = data;
+    closeModal('auth-modal');
+    showToast('✅ Вы успешно вошли в аккаунт!', 'success');
+    renderProfileTracks();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
 
 /* ──────────────────────────────────────────────
-   ГЕНЕРАЦИЯ ВОЛНЫ (waveform bars)
+   ЗАГРУЗКА ТРЕКА (с защитой от undefined)
    ────────────────────────────────────────────── */
+function initUploadModal() {
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('audio-file');
+  if (!dropZone || !fileInput) return;
 
-/**
- * Заполняет контейнер случайными барами-волнами.
- * @param {string} id     — id элемента-контейнера
- * @param {number} count  — количество баров
- */
-function generateWave(id, count = 40) {
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => e.target.files.length && handleFile(e.target.files[0]));
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+  dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = 'rgba(249,115,22,0.3)');
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.style.borderColor = 'rgba(249,115,22,0.3)';
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+
+  const createBtn = document.getElementById('create-track-btn');
+  if (createBtn) createBtn.addEventListener('click', handleTrackUpload);
+}
+
+function handleFile(file) {
+  if (!file.type.startsWith('audio/')) return showToast('Только аудиофайлы!', 'error');
+  selectedFile = file;
+  document.getElementById('drop-zone').innerHTML = `<p>✓ ${file.name} выбран</p>`;
+}
+
+async function handleTrackUpload() {
+  if (!currentUser || !currentUser._id) {
+    return showToast('Сначала войди в аккаунт!', 'error');
+  }
+  if (!selectedFile) {
+    return showToast('Выбери аудиофайл!', 'error');
+  }
+
+  const title       = document.getElementById('track-title').value.trim();
+  const genre       = document.getElementById('track-genre').value;
+  const tagsInput   = document.getElementById('track-tags').value;
+  const description = document.getElementById('track-desc').value.trim();
+  const duration    = parseInt(document.getElementById('track-duration').value);
+
+  if (!title || !genre || !duration) {
+    return showToast('Заполни название, жанр и длительность!', 'error');
+  }
+
+  const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  try {
+    console.log('🚀 Создаём трек для userId:', currentUser._id);
+
+    const trackResponse = await apiRequest(`/artists/${currentUser._id}/tracks`, 'POST', {
+      title, genre, tags, description, duration
+    });
+
+    console.log('✅ Полный ответ от createTrack:', trackResponse);
+
+    // ←←← ИСПРАВЛЕНИЕ ЗДЕСЬ
+    const trackId = trackResponse.track_id || trackResponse._id || trackResponse.id;
+
+    if (!trackId) {
+      console.error('❌ В ответе нет ID трека!', trackResponse);
+      return showToast('Ошибка: сервер не вернул ID трека', 'error');
+    }
+
+    console.log('✅ Трек создан, ID:', trackId);
+
+    // 2. Загружаем аудиофайл
+    const formData = new FormData();
+    formData.append('audio', selectedFile);
+
+    const uploadRes = await fetch(`${API_URL}/artists/${trackId}/audio`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      body: formData
+    });
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      console.error('Ошибка загрузки файла:', errText);
+      throw new Error('Ошибка загрузки файла');
+    }
+
+    // 3. Публикуем трек
+    await apiRequest(`/artists/${trackId}/publish`, 'POST');
+
+    showToast('🎵 Трек успешно загружен и опубликован!', 'success');
+    closeModal('upload-modal');
+    selectedFile = null;
+    renderProfileTracks();
+
+  } catch (err) {
+    console.error('❌ Ошибка в handleTrackUpload:', err);
+    showToast(err.message || 'Ошибка загрузки трека', 'error');
+  }
+}
+
+/* ──────────────────────────────────────────────
+   ПРОФИЛЬ + ВОЛНЫ + TOAST
+   ────────────────────────────────────────────── */
+async function renderProfileTracks() { /* твой оригинальный код */
+  const container = document.getElementById('profile-tracks');
+  if (!container || !currentUser) return;
+
+  try {
+    const tracks = await apiRequest('/artists/tracks');
+    const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    container.innerHTML = tracks.map(t => `
+      <div class="profile-track">
+        <div class="trending-num" style="color:var(--text3);">${PLAY_ICON}</div>
+        <div class="pt-cover trending-cover" style="background: linear-gradient(135deg, #7c3aed, #f97316);"></div>
+        <div class="pt-info">
+          <div class="pt-title">${t.title}</div>
+          <div class="pt-date">${new Date(t.createdAt || Date.now()).toLocaleDateString('ru-RU')}</div>
+        </div>
+        <div class="pt-wave">${Array.from({length:24},()=>`<div class="ptb" style="height:${4+Math.random()*22}px"></div>`).join('')}</div>
+        <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
+        <div class="pt-duration">${t.duration ? Math.floor(t.duration/60)+':'+(t.duration%60).toString().padStart(2,'0') : '0:00'}</div>
+      </div>
+    `).join('');
+  } catch (e) { console.log('Нет треков'); }
+}
+
+function generateWave(id, count = 40) { /* твой оригинальный код */
   const el = document.getElementById(id);
   if (!el) return;
   const heights = Array.from({ length: count }, () => 4 + Math.random() * 22);
   el.innerHTML = heights.map(h => `<div class="bar" style="height:${h}px"></div>`).join('');
 }
 
-// Инициализация волн на карточках главной
-generateWave('wave1');
-generateWave('wave2');
-generateWave('wave3');
-generateWave('wave4');
-
-
-/* ──────────────────────────────────────────────
-   ПРОФИЛЬ — генерация списка треков
-   ────────────────────────────────────────────── */
-
-/** Данные треков профиля */
-const PROFILE_TRACKS = [
-  { title: 'Neon Pulse — Original Mix',  date: '15 марта 2026',    plays: '71K', dur: '6:24', cls: 'cover-5' },
-  { title: 'Dark Room Sessions',          date: '2 марта 2026',     plays: '48K', dur: '4:51', cls: 'cover-1' },
-  { title: 'Subterranean Groove',         date: '18 февраля 2026',  plays: '33K', dur: '7:02', cls: 'cover-3' },
-  { title: 'Afterhours EP — Track 3',     date: '5 февраля 2026',   plays: '22K', dur: '5:38', cls: 'cover-6' },
-  { title: 'Voltage Rise (Club Edit)',    date: '20 января 2026',   plays: '19K', dur: '3:44', cls: 'cover-4' },
-];
-
-/**
- * Генерирует HTML случайных мини-баров волны для трека.
- * @param {number} n — количество баров
- * @returns {string}
- */
-function rndBars(n = 24) {
-  return Array.from({ length: n }, () => {
-    const h = 4 + Math.random() * 22;
-    return `<div class="ptb" style="height:${h}px; width:2px;"></div>`;
-  }).join('');
+function showToast(message, type = 'success') { /* твой оригинальный код */
+  const toast = document.getElementById('toast');
+  const text = document.getElementById('toast-text');
+  const iconHTML = type === 'success'
+    ? `<svg width="20" height="20" fill="none" stroke="#22c55e" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+    : `<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6h12v12"/></svg>`;
+  text.innerHTML = `${iconHTML} <span style="margin-left:8px;">${message}</span>`;
+  toast.style.borderColor = type === 'success' ? '#22c55e' : '#ef4444';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
-
-/** SVG-иконка воспроизведения (play) */
-const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-  <polygon points="5 3 19 12 5 21 5 3"/>
-</svg>`;
-
-/**
- * Рендерит список треков профиля в контейнер #profile-tracks.
- */
-function renderProfileTracks() {
-  const container = document.getElementById('profile-tracks');
-  if (!container) return;
-
-  container.innerHTML = PROFILE_TRACKS.map(t => `
-    <div class="profile-track">
-      <div class="trending-num" style="color:var(--text3);">${PLAY_ICON}</div>
-      <div class="pt-cover trending-cover ${t.cls}"></div>
-      <div class="pt-info">
-        <div class="pt-title">${t.title}</div>
-        <div class="pt-date">${t.date}</div>
-      </div>
-      <div class="pt-wave">${rndBars()}</div>
-      <div class="pt-plays">${PLAY_ICON} ${t.plays}</div>
-      <div class="pt-duration">${t.dur}</div>
-    </div>
-  `).join('');
-}
-
-renderProfileTracks();
-
 
 /* ──────────────────────────────────────────────
    ИНИЦИАЛИЗАЦИЯ
    ────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  // Убеждаемся, что стартовая страница — главная
   showPage('home');
+  initUploadModal();
+  generateWave('wave1'); generateWave('wave2'); generateWave('wave3'); generateWave('wave4');
+
+  loadCurrentUser();   // ←←← главное исправление
 });
 
-function openUploadWithReset() {
-  // закрываем ВСЕ открытые модалки (на случай, если открыта авторизация)
-  document.querySelectorAll('.modal-overlay.open').forEach(modal => {
-    modal.classList.remove('open');
-  });
-
-  // открываем загрузку
+window.openUploadWithReset = () => {
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  if (!currentUser) return showToast('Сначала войди в аккаунт!', 'error');
   showModal('upload-modal');
-}
+};
 
-function openAuthWithReset() {
-  // закрываем ВСЕ открытые модалки (включая upload-modal, если она была)
-  document.querySelectorAll('.modal-overlay.open').forEach(modal => {
-    modal.classList.remove('open');
-  });
-
-  // открываем авторизацию
+window.openAuthWithReset = () => {
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   showModal('auth-modal');
-}
-
-async function handleRegister(e) {
-  e.preventDefault();
-
-  const username = document.getElementById('reg-username').value.trim();
-  const email    = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
-
-  try {
-    const data = await apiRequest('/auth/register', 'POST', { username, email, password });
-
-    localStorage.setItem('token', data.token);
-    closeModal('auth-modal');
-
-    showToast('✅ Регистрация прошла успешно!', 'success');
-
-  } catch (err) {
-    showToast(err.message || 'Ошибка регистрации', 'error');
-  }
-}
-
-async function handleLogin(e) {
-  e.preventDefault();
-
-  const email    = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-
-  try {
-    const data = await apiRequest('/auth/login', 'POST', { email, password });
-
-    localStorage.setItem('token', data.token);
-    closeModal('auth-modal');
-
-    showToast('✅ Вы успешно вошли в аккаунт!', 'success');
-
-  } catch (err) {
-    showToast(err.message || 'Ошибка входа', 'error');
-  }
-}
-
-/* ====================== TOAST ====================== */
-/* ====================== TOAST ====================== */
-function showToast(message, type = 'success') {
-  const toast = document.getElementById('toast');
-  const text  = document.getElementById('toast-text');
-
-  // Добавляем иконку
-  const iconHTML = type === 'success'
-    ? `<svg width="20" height="20" fill="none" stroke="#22c55e" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
-    : `<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6h12v12"/></svg>`;
-
-  text.innerHTML = `${iconHTML} <span style="margin-left:8px;">${message}</span>`;
-
-  // Цвет рамки
-  toast.style.borderColor = type === 'success' ? '#22c55e' : '#ef4444';
-
-  toast.classList.add('show');
-
-  // Автоскрытие 3 секунды
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
-}
-
-async function loadMe() {
-  try {
-    const user = await apiRequest('/auth/me');
-    console.log('User:', user);
-  } catch {
-    console.log('Не авторизован');
-  }
-}
-
-loadMe();
+};

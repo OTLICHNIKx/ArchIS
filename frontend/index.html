@@ -440,14 +440,17 @@
 
 
 <!-- ═══════════════════════════════════════════════════
-     MODAL: Загрузка трека
+     MODAL: Загрузка трека (ИСПРАВЛЕННАЯ)
      ═══════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="upload-modal">
   <div class="modal upload-modal" style="max-height:90vh;overflow-y:auto;">
     <button class="modal-close" onclick="closeModal('upload-modal')">✕</button>
     <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:20px;">Загрузить трек</div>
 
-    <div class="drop-zone">
+    <!-- Скрытый input для файла (ОБЯЗАТЕЛЬНО!) -->
+    <input type="file" id="audio-file" accept="audio/*" hidden>
+
+    <div id="drop-zone" class="drop-zone">
       <div class="drop-icon">
         <svg width="24" height="24" fill="none" stroke="#f97316" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
       </div>
@@ -456,62 +459,42 @@
       <div class="drop-formats">MP3 · WAV · FLAC · AAC · OGG — до 500 MB</div>
     </div>
 
-    <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-      <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/></svg>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;">neon_pulse_v3_final.wav</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px;">8.4 MB · 65% загружено</div>
-        <div class="progress-bar"><div class="progress-fill"></div></div>
-      </div>
-      <button style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;">✕</button>
+    <div class="form-group">
+      <label class="form-label">Название трека *</label>
+      <input id="track-title" class="form-input" type="text" placeholder="Neon Pulse">
     </div>
-
-    <div class="cover-upload">
-      <div class="cover-thumb">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      </div>
-      <div class="cover-text">
-        <div class="t1">Обложка трека</div>
-        <div class="t2">JPG, PNG — минимум 500×500px</div>
-      </div>
-      <button class="btn btn-ghost" style="margin-left:auto;font-size:12px;padding:6px 12px;">Выбрать</button>
-    </div>
-
-    <div class="form-group"><label class="form-label">Название трека *</label><input class="form-input" type="text" placeholder="Neon Pulse"></div>
 
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Жанр</label>
-        <select class="form-input" style="cursor:pointer;">
+        <select id="track-genre" class="form-input">
           <option value="">Выбрать жанр</option>
-          <option>Electronic</option><option>House</option><option>Techno</option>
-          <option>Ambient</option><option>Hip-Hop</option><option>Lo-Fi</option>
+          <option value="Electronic">Electronic</option>
+          <option value="House">House</option>
+          <option value="Techno">Techno</option>
+          <option value="Ambient">Ambient</option>
+          <option value="Hip-Hop">Hip-Hop</option>
+          <option value="Lo-Fi">Lo-Fi</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">BPM</label><input class="form-input" type="number" placeholder="128"></div>
-    </div>
-
-    <div class="form-group"><label class="form-label">Описание</label><textarea class="form-input" rows="3" placeholder="Расскажи о треке…" style="resize:none;"></textarea></div>
-
-    <div class="form-group">
-      <label class="form-label">Теги</label>
-      <div class="tag-row">
-        <div class="tag active">electronic</div>
-        <div class="tag active">house</div>
-        <div class="tag">dark</div>
-        <div class="tag">neon</div>
-        <div class="tag">synth</div>
-        <div class="tag">bass</div>
-        <div class="tag">club</div>
-        <div class="tag">+</div>
+      <div class="form-group">
+        <label class="form-label">Длительность (сек)</label>
+        <input id="track-duration" class="form-input" type="number" placeholder="180" min="1">
       </div>
     </div>
 
-    <div class="toggle-row"><div class="toggle-label">Публичный трек</div><div class="toggle"></div></div>
-    <div class="toggle-row"><div class="toggle-label">Разрешить скачивание</div><div class="toggle off"></div></div>
-    <div class="toggle-row"><div class="toggle-label">Монетизация</div><div class="toggle off"></div></div>
+    <div class="form-group">
+      <label class="form-label">Описание</label>
+      <textarea id="track-desc" class="form-input" rows="3" placeholder="Расскажи о треке…"></textarea>
+    </div>
 
-    <button class="btn btn-accent btn-full" style="margin-top:20px;">Опубликовать трек</button>
+    <div class="form-group">
+      <label class="form-label">Теги (через запятую)</label>
+      <input id="track-tags" class="form-input" type="text" placeholder="electronic, house, neon">
+    </div>
+    <button id="create-track-btn" class="btn btn-accent btn-full" style="margin-top:20px;">
+      Опубликовать трек
+    </button>
   </div>
 </div>
 <!-- /MODAL: Загрузка -->
