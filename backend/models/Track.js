@@ -5,6 +5,7 @@ const { TrackStatus } = require('../domain/Track');
 const trackSchema = new mongoose.Schema({
   title:        { type: String, required: true, trim: true },
   artistId:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  artistName:   { type: String, default: null, trim: true },
   audioUrl:     { type: String, default: null },
   coverUrl:     { type: String, default: null },
   genre:        { type: String, required: true },

@@ -194,25 +194,46 @@ function initUploadModal() {
   if (createBtn) createBtn.addEventListener('click', handleTrackUpload);
 }
 
+/* Автоподхват метаданных + имя артиста */
 function handleFile(file) {
-  if (!file.type.startsWith('audio/')) return showToast('Только аудиофайлы!', 'error');
+  if (!file.type.startsWith('audio/')) {
+    return showToast('Только аудиофайлы!', 'error');
+  }
   selectedFile = file;
+
+  const titleInput = document.getElementById('track-title');
+  let filename = file.name.replace(/\.[^/.]+$/, "");
+  titleInput.value = filename;
+
+  // Автоподстановка имени артиста из текущего пользователя
+  const artistInput = document.getElementById('artist-name');
+  if (currentUser && currentUser.username) {
+    artistInput.value = currentUser.username;
+  }
+
+  // Длительность
+  const audio = new Audio();
+  audio.src = URL.createObjectURL(file);
+  audio.onloadedmetadata = () => {
+    document.getElementById('track-duration').value = Math.round(audio.duration);
+    URL.revokeObjectURL(audio.src);
+  };
+
   document.getElementById('drop-zone').innerHTML = `<p>✓ ${file.name} выбран</p>`;
 }
 
+/* Загрузка трека с именем артиста */
 async function handleTrackUpload() {
-  if (!currentUser || !currentUser._id) {
-    return showToast('Сначала войди в аккаунт!', 'error');
-  }
-  if (!selectedFile) {
-    return showToast('Выбери аудиофайл!', 'error');
-  }
+  if (!currentUser || !currentUser._id) return showToast('Сначала войди!', 'error');
+  if (!selectedFile) return showToast('Выбери аудиофайл!', 'error');
 
   const title       = document.getElementById('track-title').value.trim();
+  const artistName  = document.getElementById('artist-name').value.trim() || currentUser.username;
   const genre       = document.getElementById('track-genre').value;
   const tagsInput   = document.getElementById('track-tags').value;
   const description = document.getElementById('track-desc').value.trim();
   const duration    = parseInt(document.getElementById('track-duration').value);
+  const isPublic    = !document.getElementById('public-toggle').classList.contains('off');
 
   if (!title || !genre || !duration) {
     return showToast('Заполни название, жанр и длительность!', 'error');
@@ -221,55 +242,35 @@ async function handleTrackUpload() {
   const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
 
   try {
-    console.log('🚀 Создаём трек для userId:', currentUser._id);
-
     const trackResponse = await apiRequest(`/artists/${currentUser._id}/tracks`, 'POST', {
-      title, genre, tags, description, duration
+      title,
+      artistName,           // ← новое поле
+      genre,
+      tags,
+      description,
+      duration,
+      isPublic
     });
 
-    console.log('✅ Полный ответ от createTrack:', trackResponse);
-
-    // ←←← ИСПРАВЛЕНИЕ ЗДЕСЬ
     const trackId = trackResponse.track_id || trackResponse._id || trackResponse.id;
 
-    if (!trackId) {
-      console.error('❌ В ответе нет ID трека!', trackResponse);
-      return showToast('Ошибка: сервер не вернул ID трека', 'error');
-    }
-
-    console.log('✅ Трек создан, ID:', trackId);
-
-    // 2. Загружаем аудиофайл
+    // Загрузка файла
     const formData = new FormData();
     formData.append('audio', selectedFile);
-
-    const uploadRes = await fetch(`${API_URL}/artists/${trackId}/audio`, {
+    await fetch(`${API_URL}/artists/${trackId}/audio`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       body: formData
     });
 
-    if (!uploadRes.ok) {
-      const errText = await uploadRes.text();
-      console.error('Ошибка загрузки файла:', errText);
-      throw new Error('Ошибка загрузки файла');
-    }
-
-    // 3. Публикуем трек
     await apiRequest(`/artists/${trackId}/publish`, 'POST');
 
-    showToast('🎵 Трек успешно загружен и опубликован!', 'success');
-    closeModal('upload-modal');
-    selectedFile = null;
-    renderProfileTracks();
-
-    showToast('🎵 Трек успешно загружен и опубликован!', 'success');
+    showToast('🎵 Трек успешно опубликован!', 'success');
     closeModal('upload-modal');
     selectedFile = null;
     renderProfileTracks();
   } catch (err) {
-    console.error('❌ Ошибка в handleTrackUpload:', err);
-    showToast(err.message || 'Ошибка загрузки трека', 'error');
+    showToast(err.message || 'Ошибка загрузки', 'error');
   }
 }
 
@@ -412,7 +413,7 @@ function renderProfilePage() {
 /* ──────────────────────────────────────────────
    ПРОФИЛЬ + ВОЛНЫ + TOAST
    ────────────────────────────────────────────── */
-async function renderProfileTracks() { /* твой оригинальный код */
+async function renderProfileTracks() {
   const container = document.getElementById('profile-tracks');
   if (!container || !currentUser) return;
 
@@ -425,7 +426,7 @@ async function renderProfileTracks() { /* твой оригинальный ко
         <div class="pt-cover trending-cover" style="background: linear-gradient(135deg, #7c3aed, #f97316);"></div>
         <div class="pt-info">
           <div class="pt-title">${t.title}</div>
-          <div class="pt-date">${new Date(t.createdAt || Date.now()).toLocaleDateString('ru-RU')}</div>
+          <div class="pt-date">${t.artistName || currentUser?.username || 'Неизвестный артист'}</div>
         </div>
         <div class="pt-wave">${Array.from({length:24},()=>`<div class="ptb" style="height:${4+Math.random()*22}px"></div>`).join('')}</div>
         <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>

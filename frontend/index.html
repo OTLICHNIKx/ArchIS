@@ -384,6 +384,12 @@
       <div class="drop-formats">MP3 · WAV · FLAC · AAC · OGG — до 500 MB</div>
     </div>
 
+      <!-- Новое поле: Имя артиста -->
+    <div class="form-group">
+      <label class="form-label">Имя артиста</label>
+      <input id="artist-name" class="form-input" type="text" placeholder="OTLICHNIK">
+    </div>
+
     <div class="form-group">
       <label class="form-label">Название трека *</label>
       <input id="track-title" class="form-input" type="text" placeholder="Neon Pulse">
@@ -417,6 +423,14 @@
       <label class="form-label">Теги (через запятую)</label>
       <input id="track-tags" class="form-input" type="text" placeholder="electronic, house, neon">
     </div>
+
+    <div class="toggle-row">
+      <div class="toggle-label">Публичный трек</div>
+      <div id="public-toggle" class="toggle" onclick="this.classList.toggle('off')">
+        <span></span>
+      </div>
+    </div>
+
     <button id="create-track-btn" class="btn btn-accent btn-full" style="margin-top:20px;">
       Опубликовать трек
     </button>

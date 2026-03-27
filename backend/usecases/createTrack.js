@@ -39,6 +39,7 @@ function makeCreateTrack({ trackRepository, tagRepository }) {
     const track = await trackRepository.create({
       title,
       artistId,
+      artistName: data.artistName || undefined,
       genre,
       tags,
       description,
