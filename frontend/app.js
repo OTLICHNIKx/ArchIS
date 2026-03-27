@@ -251,22 +251,24 @@ async function handleLogin(e) {
 }
 
 /* ====================== TOAST ====================== */
+/* ====================== TOAST ====================== */
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   const text  = document.getElementById('toast-text');
 
-  text.textContent = message;
+  // Добавляем иконку
+  const iconHTML = type === 'success'
+    ? `<svg width="20" height="20" fill="none" stroke="#22c55e" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+    : `<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6h12v12"/></svg>`;
 
-  // Цвет акцента в зависимости от типа
-  if (type === 'error') {
-    toast.style.borderColor = '#ef4444';
-  } else {
-    toast.style.borderColor = 'var(--accent)';
-  }
+  text.innerHTML = `${iconHTML} <span style="margin-left:8px;">${message}</span>`;
+
+  // Цвет рамки
+  toast.style.borderColor = type === 'success' ? '#22c55e' : '#ef4444';
 
   toast.classList.add('show');
 
-  // Автоскрытие через 3 секунды
+  // Автоскрытие 3 секунды
   setTimeout(() => {
     toast.classList.remove('show');
   }, 3000);
