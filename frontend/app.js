@@ -262,6 +262,10 @@ async function handleTrackUpload() {
     selectedFile = null;
     renderProfileTracks();
 
+    showToast('🎵 Трек успешно загружен и опубликован!', 'success');
+    closeModal('upload-modal');
+    selectedFile = null;
+    renderProfileTracks();
   } catch (err) {
     console.error('❌ Ошибка в handleTrackUpload:', err);
     showToast(err.message || 'Ошибка загрузки трека', 'error');
