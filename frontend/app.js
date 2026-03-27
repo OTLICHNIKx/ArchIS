@@ -111,6 +111,7 @@ function clearAuthForms() {
 async function handleRegister(e) {
   e.preventDefault();
   const username = document.getElementById('reg-username').value.trim();
+  if (username.startsWith('@')) username = username.substring(1);
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
 
@@ -312,7 +313,7 @@ function renderProfileHeader() {
 
   if (nameEl) nameEl.textContent = currentUser.username || 'Пользователь';
   if (handleEl) handleEl.innerHTML = `
-    @${(currentUser.username || 'user').replace('@','')}
+    @${(currentUser.username || 'user').replace(/^@/, '')}
     <span style="color:var(--text3)">· Москва, RU</span>
   `;
   if (avatarEl) avatarEl.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
@@ -373,7 +374,7 @@ function renderProfilePage() {
         <div id="profile-avatar" class="profile-avatar">${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}</div>
         <div class="profile-meta">
           <div id="profile-name" class="profile-name">${currentUser.username || 'Пользователь'}</div>
-          <div id="profile-handle" class="profile-handle">@${(currentUser.username || 'user').replace('@','')} · Москва, RU</div>
+          <div id="profile-handle" class="profile-handle">@${(currentUser.username || 'user').replace(/^@/, '')}</div>
         </div>
         <div id="profile-actions" class="profile-actions">
           <button onclick="alert('Редактирование профиля в разработке')" class="btn btn-outline-accent btn-ghost">Редактировать профиль</button>
@@ -459,6 +460,7 @@ function showToast(message, type = 'success') { /* твой оригинальн
 document.addEventListener('DOMContentLoaded', () => {
   showPage('home');
   initUploadModal();
+  initModalCloseBehavior();
   generateWave('wave1'); generateWave('wave2'); generateWave('wave3'); generateWave('wave4');
 
   loadCurrentUser();   // ←←← главное исправление
@@ -481,3 +483,19 @@ window.openUploadWithReset = () => {
   }
   showModal('upload-modal');
 };
+
+function initModalCloseBehavior() {
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('mousedown', e => { overlay.dataset.mouseDownTarget = e.target; });
+    overlay.addEventListener('mouseup', e => {
+      if (overlay.dataset.mouseDownTarget === overlay && e.target === overlay) {
+        // НИЧЕГО НЕ ДЕЛАЕМ — закрытие только по крестику
+      }
+      delete overlay.dataset.mouseDownTarget;
+    });
+  });
+
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', e => e.stopPropagation());
+  });
+}
