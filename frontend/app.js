@@ -39,6 +39,7 @@ async function loadCurrentUser() {
     currentUser = user;
     console.log('✅ Текущий пользователь загружен:', currentUser);
     renderProfileTracks();
+    updateTopbarAuth();
   } catch (err) {
     console.warn('Не удалось загрузить пользователя (токен устарел?)');
     localStorage.removeItem('token');
@@ -107,6 +108,7 @@ async function handleRegister(e) {
 
     renderProfileHeader();
     renderProfileTracks();
+    updateTopbarAuth();
     //showPage('profile');
 
   } catch (err) {
@@ -129,11 +131,20 @@ async function handleLogin(e) {
     showToast(`С возвращением, ${data.username}! 👋`, 'success')
     renderProfileHeader();
     renderProfileTracks();
+    updateTopbarAuth();
     //showPage('profile');
 
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  currentUser = null;
+  updateTopbarAuth();
+  showPage('home');
+  showToast('Вы вышли из аккаунта', 'success');
 }
 
 /* ──────────────────────────────────────────────
@@ -231,6 +242,32 @@ async function handleTrackUpload() {
   } catch (err) {
     console.error('❌ Ошибка в handleTrackUpload:', err);
     showToast(err.message || 'Ошибка загрузки трека', 'error');
+  }
+}
+
+/* ──────────────────────────────────────────────
+   ОБНОВЛЕНИЕ TOPBAR (кнопки авторизации)
+   ────────────────────────────────────────────── */
+function updateTopbarAuth() {
+  const container = document.getElementById('topbar-auth');
+  if (!container) return;
+
+  if (currentUser) {
+    // Пользователь залогинен
+    container.innerHTML = `
+      <div onclick="logout()" class="btn btn-ghost" style="cursor:pointer; margin-right:12px;">
+        Выйти
+      </div>
+      <div class="avatar" onclick="showPage('profile')">
+        ${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}
+      </div>
+    `;
+  } else {
+    // Пользователь не залогинен
+    container.innerHTML = `
+      <button class="btn btn-ghost" onclick="showModal('auth-modal')">Войти</button>
+      <button class="btn btn-accent" onclick="showModal('auth-modal')">Регистрация</button>
+    `;
   }
 }
 
