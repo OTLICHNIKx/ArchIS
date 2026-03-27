@@ -2,6 +2,29 @@
    app.js — OtlichnikMusic UI Logic
    ══════════════════════════════════════════════ */
 
+// ================= API =================
+const API_URL = 'http://localhost:5000/api';
+
+async function apiRequest(path, method = 'GET', body = null) {
+  const token = localStorage.getItem('token');
+
+  const res = await fetch(API_URL + path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: 'Bearer ' + token })
+    },
+    body: body ? JSON.stringify(body) : null
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || 'Ошибка');
+  }
+
+  return data;
+}
 
 /* ──────────────────────────────────────────────
    НАВИГАЦИЯ ПО СТРАНИЦАМ
@@ -187,3 +210,77 @@ function openAuthWithReset() {
   // открываем авторизацию
   showModal('auth-modal');
 }
+
+async function handleRegister(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+
+  try {
+    const data = await apiRequest('/auth/register', 'POST', { username, email, password });
+
+    localStorage.setItem('token', data.token);
+    closeModal('auth-modal');
+
+    showToast('✅ Регистрация прошла успешно!', 'success');
+
+  } catch (err) {
+    showToast(err.message || 'Ошибка регистрации', 'error');
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  try {
+    const data = await apiRequest('/auth/login', 'POST', { email, password });
+
+    localStorage.setItem('token', data.token);
+    closeModal('auth-modal');
+
+    showToast('✅ Вы успешно вошли в аккаунт!', 'success');
+
+  } catch (err) {
+    showToast(err.message || 'Ошибка входа', 'error');
+  }
+}
+
+/* ====================== TOAST ====================== */
+/* ====================== TOAST ====================== */
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const text  = document.getElementById('toast-text');
+
+  // Добавляем иконку
+  const iconHTML = type === 'success'
+    ? `<svg width="20" height="20" fill="none" stroke="#22c55e" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+    : `<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6h12v12"/></svg>`;
+
+  text.innerHTML = `${iconHTML} <span style="margin-left:8px;">${message}</span>`;
+
+  // Цвет рамки
+  toast.style.borderColor = type === 'success' ? '#22c55e' : '#ef4444';
+
+  toast.classList.add('show');
+
+  // Автоскрытие 3 секунды
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+async function loadMe() {
+  try {
+    const user = await apiRequest('/auth/me');
+    console.log('User:', user);
+  } catch {
+    console.log('Не авторизован');
+  }
+}
+
+loadMe();

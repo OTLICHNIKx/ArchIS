@@ -638,3 +638,35 @@ body {
 }
 .demo-btn:hover  { color: var(--text); background: rgba(255,255,255,0.06); }
 .demo-btn.active { background: var(--accent); color: white; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg3);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 24px;
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
+  display: none;
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+  min-width: 280px;
+  animation: toastIn 0.3s ease;
+}
+
+.toast.show { display: flex; }
+
+.toast-text {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
