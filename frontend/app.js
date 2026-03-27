@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════
-   app.js — OtlichnikMusic UI Logic (ФИНАЛЬНАЯ ВЕРСИЯ С MERGE)
+   app.js — OtlichnikMusic UI Logic (ФИНАЛЬНЫЙ MERGE)
    ══════════════════════════════════════════════ */
 
 // ================= API =================
@@ -89,31 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     overlay.addEventListener('mouseup', function(e) {
       if (overlay.dataset.mouseDownTarget === overlay && e.target === overlay) {
-        // Закрываем только если нажали и отпустили именно на оверлее
         overlay.classList.remove('open');
       }
       delete overlay.dataset.mouseDownTarget;
     });
   });
 
-  // Предотвращаем закрытие при клике внутри самой модалки
+  // Предотвращаем закрытие при клике внутри модалки
   document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
+    modal.addEventListener('click', e => e.stopPropagation());
   });
 });
-
-/* ──────────────────────────────────────────────
-   АВТОРИЗАЦИЯ
-   ────────────────────────────────────────────── */
-function clearAuthForms() {
-  document.getElementById('reg-username').value = '';
-  document.getElementById('reg-email').value = '';
-  document.getElementById('reg-password').value = '';
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-password').value = '';
-}
 
 function switchTab(tab) {
   const tabs = document.querySelectorAll('#auth-tabs .tab');
@@ -123,16 +109,25 @@ function switchTab(tab) {
   document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
 }
 
+/* ──────────────────────────────────────────────
+   АВТОРИЗАЦИЯ (с улучшениями товарища)
+   ────────────────────────────────────────────── */
+function clearAuthForms() {
+  document.getElementById('reg-username').value = '';
+  document.getElementById('reg-email').value = '';
+  document.getElementById('reg-password').value = '';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+}
+
 async function handleRegister(e) {
   e.preventDefault();
   let username = document.getElementById('reg-username').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
 
-  // Убираем @ если пользователь ввёл
-  if (username.startsWith('@')) {
-    username = username.substring(1);
-  }
+  // Убираем @ если ввели
+  if (username.startsWith('@')) username = username.substring(1);
 
   if (!username) {
     showToast('Введите имя пользователя', 'error');
@@ -154,7 +149,6 @@ async function handleRegister(e) {
     renderProfileHeader();
     renderProfileTracks();
 
-    // Не переключаем страницу автоматически
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -300,7 +294,7 @@ function renderProfileHeader() {
 }
 
 /* ──────────────────────────────────────────────
-   РЕНДЕР ПРОФИЛЯ
+   РЕНДЕР ПРОФИЛЯ (с проверкой авторизации)
    ────────────────────────────────────────────── */
 function renderProfilePage() {
   const content = document.getElementById('profile-content');
@@ -322,12 +316,104 @@ function renderProfilePage() {
     return;
   }
 
-  // Залогинен
-  content.innerHTML = `... (твой предыдущий код нормального профиля) ...`;
-  // (я не стал его копировать полностью, чтобы не раздувать сообщение — оставь свой последний рабочий вариант)
+  // Залогинен — нормальный профиль
+  content.innerHTML = `
+    <div class="topbar">
+      <button class="btn btn-ghost" style="gap:6px;display:flex;align-items:center;" onclick="showPage('home')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Назад
+      </button>
+      <div class="topbar-right">
+        <button onclick="logout()" class="btn btn-ghost" style="margin-right:12px;">Выйти</button>
+        <div class="avatar" onclick="showPage('profile')">${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}</div>
+      </div>
+    </div>
+
+    <div class="profile-hero">
+      <div class="hero-bg"></div>
+      <div class="hero-noise"></div>
+      <div class="hero-overlay"></div>
+      <div class="profile-info">
+        <div id="profile-avatar" class="profile-avatar">${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}</div>
+        <div class="profile-meta">
+          <div id="profile-name" class="profile-name">${currentUser.username || 'Пользователь'}</div>
+          <div id="profile-handle" class="profile-handle">@${(currentUser.username || 'user').replace('@','')} · Москва, RU</div>
+        </div>
+        <div id="profile-actions" class="profile-actions">
+          <button onclick="alert('Редактирование профиля в разработке')" class="btn btn-outline-accent btn-ghost">Редактировать профиль</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div class="profile-stats">
+          <div class="stat"><div id="stat-tracks" class="stat-val">—</div><div class="stat-key">Треков</div></div>
+          <div class="stat"><div id="stat-followers" class="stat-val">0</div><div class="stat-key">Подписчиков</div></div>
+          <div class="stat"><div id="stat-plays" class="stat-val">0</div><div class="stat-key">Прослушиваний</div></div>
+          <div class="stat"><div id="stat-following" class="stat-val">0</div><div class="stat-key">Подписан</div></div>
+        </div>
+        <div id="profile-bio" style="color:var(--text2);font-size:13px;max-width:320px;line-height:1.6;min-height:20px;"></div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="ptab active">Треки</div>
+        <div class="ptab">Плейлисты</div>
+        <div class="ptab">Лайки</div>
+        <div class="ptab">Информация</div>
+      </div>
+
+      <div class="profile-tracks" id="profile-tracks"></div>
+    </div>
+  `;
 
   renderProfileHeader();
   renderProfileTracks();
+}
+
+/* ──────────────────────────────────────────────
+   ПРОФИЛЬ + ВОЛНЫ + TOAST
+   ────────────────────────────────────────────── */
+async function renderProfileTracks() {
+  const container = document.getElementById('profile-tracks');
+  if (!container || !currentUser) return;
+
+  try {
+    const tracks = await apiRequest('/artists/tracks');
+    const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    container.innerHTML = tracks.map(t => `
+      <div class="profile-track">
+        <div class="trending-num" style="color:var(--text3);">${PLAY_ICON}</div>
+        <div class="pt-cover trending-cover" style="background: linear-gradient(135deg, #7c3aed, #f97316);"></div>
+        <div class="pt-info">
+          <div class="pt-title">${t.title}</div>
+          <div class="pt-date">${new Date(t.createdAt || Date.now()).toLocaleDateString('ru-RU')}</div>
+        </div>
+        <div class="pt-wave">${Array.from({length:24},()=>`<div class="ptb" style="height:${4+Math.random()*22}px"></div>`).join('')}</div>
+        <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
+        <div class="pt-duration">${t.duration ? Math.floor(t.duration/60)+':'+(t.duration%60).toString().padStart(2,'0') : '0:00'}</div>
+      </div>
+    `).join('');
+  } catch (e) { console.log('Нет треков'); }
+}
+
+function generateWave(id, count = 40) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const heights = Array.from({ length: count }, () => 4 + Math.random() * 22);
+  el.innerHTML = heights.map(h => `<div class="bar" style="height:${h}px"></div>`).join('');
+}
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const text = document.getElementById('toast-text');
+  const iconHTML = type === 'success'
+    ? `<svg width="20" height="20" fill="none" stroke="#22c55e" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+    : `<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6h12v12"/></svg>`;
+  text.innerHTML = `${iconHTML} <span style="margin-left:8px;">${message}</span>`;
+  toast.style.borderColor = type === 'success' ? '#22c55e' : '#ef4444';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 /* ──────────────────────────────────────────────
@@ -340,13 +426,17 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCurrentUser();
 });
 
-/* Глобальные функции */
+/* Глобальные функции для onclick в HTML */
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.showPage = showPage;
 window.logout = logout;
-window.openAuthWithReset = () => showModal('auth-modal');
+window.openAuthWithReset = () => {
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  showModal('auth-modal');
+};
 window.openUploadWithReset = () => {
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   if (!currentUser) {
     showToast('Сначала войди в аккаунт!', 'error');
     return;
