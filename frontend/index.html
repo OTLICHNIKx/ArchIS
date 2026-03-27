@@ -372,7 +372,7 @@
     </div>
 
     <!-- Форма входа -->
-    <form id="form-login">
+    <form id="form-login" onsubmit="handleLogin(event)">
       <div class="form-group">
         <label class="form-label">Email или имя пользователя</label>
         <input id="login-email" class="form-input" type="text" placeholder="you@example.com">
@@ -381,7 +381,7 @@
         <label class="form-label">Пароль</label>
         <input id="login-password" class="form-input" type="password" placeholder="••••••••">
       </div>
-      <button class="btn btn-accent btn-full" style="margin-top:4px;">Войти</button>
+      <button type="submit" class="btn btn-accent btn-full" style="margin-top:4px;">Войти</button>
       <div class="divider"><span>или</span></div>
       <div class="social-btns">
         <button class="social-btn">
@@ -423,7 +423,7 @@
           <input id="reg-password" class="form-input" type="password" placeholder="Минимум 8 символов">
       </div>
 
-      <button class="btn btn-accent btn-full" style="margin-top:4px;">
+      <button type="submit" class="btn btn-accent btn-full" style="margin-top:4px;">
           Создать аккаунт
       </button>
 
@@ -523,6 +523,10 @@
   <button class="demo-btn"                         onclick="openUploadWithReset()">Загрузка</button>
 </div>
 
+<!-- Toast уведомление -->
+<div id="toast" class="toast">
+  <div id="toast-text" class="toast-text"></div>
+</div>
 
 <script src="app.js"></script>
 </body>
