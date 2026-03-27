@@ -79,7 +79,7 @@ function closeModal(id) {
 }
 
 /* ──────────────────────────────────────────────
-   ЗАКРЫТИЕ МОДАЛКИ ТОЛЬКО ПО КРЕСТИКУ (от товарища)
+   ЗАКРЫТИЕ МОДАЛКИ ТОЛЬКО ПО КРЕСТИКУ
    ────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Предотвращаем закрытие при клике внутри модалки
   document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', e => e.stopPropagation());
   });
@@ -110,7 +109,7 @@ function switchTab(tab) {
 }
 
 /* ──────────────────────────────────────────────
-   АВТОРИЗАЦИЯ (с улучшениями товарища)
+   АВТОРИЗАЦИЯ
    ────────────────────────────────────────────── */
 function clearAuthForms() {
   document.getElementById('reg-username').value = '';
@@ -126,7 +125,6 @@ async function handleRegister(e) {
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
 
-  // Убираем @ если ввели
   if (username.startsWith('@')) username = username.substring(1);
 
   if (!username) {
@@ -294,7 +292,7 @@ function renderProfileHeader() {
 }
 
 /* ──────────────────────────────────────────────
-   РЕНДЕР ПРОФИЛЯ (с проверкой авторизации)
+   РЕНДЕР ПРОФИЛЯ
    ────────────────────────────────────────────── */
 function renderProfilePage() {
   const content = document.getElementById('profile-content');
@@ -316,7 +314,6 @@ function renderProfilePage() {
     return;
   }
 
-  // Залогинен — нормальный профиль
   content.innerHTML = `
     <div class="topbar">
       <button class="btn btn-ghost" style="gap:6px;display:flex;align-items:center;" onclick="showPage('home')">
