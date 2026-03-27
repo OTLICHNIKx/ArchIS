@@ -51,24 +51,41 @@ async function loadCurrentUser() {
    НАВИГАЦИЯ И МОДАЛКИ
    ────────────────────────────────────────────── */
 function showPage(name) {
+  // Закрываем все модалки
   document.querySelectorAll('.modal-overlay.open').forEach(modal => modal.classList.remove('open'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
 
+  // Снимаем active со всех страниц
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  // Активируем нужную страницу
+  const pageElement = document.getElementById('page-' + name);
+  if (pageElement) {
+    pageElement.classList.add('active');
+  }
+
+  // Специальная логика для профиля
+  if (name === 'profile') {
+    renderProfilePage();
+  }
+
+  // Обновляем активную кнопку в демо-навигаторе
   document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('nav-' + name);
   if (btn) btn.classList.add('active');
+
+  // Обновляем топбар (кнопки Войти/Регистрация → Аватар + Выйти)
+  updateTopbarAuth();
 }
 
-function showModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add('open');
+}
 
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(el => el.classList.remove('open'));
-});
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove('open');
+}
 
 function switchTab(tab) { /* оставил твой оригинальный код */
   const tabs = document.querySelectorAll('#auth-tabs .tab');
@@ -108,8 +125,10 @@ async function handleRegister(e) {
 
     renderProfileHeader();
     renderProfileTracks();
-    updateTopbarAuth();
-    //showPage('profile');
+    // Если сейчас открыт профиль — обновляем его содержимое
+    if (document.getElementById('page-profile').classList.contains('active')) {
+      renderProfilePage();
+    }
 
   } catch (err) {
     showToast(err.message, 'error');
@@ -131,8 +150,10 @@ async function handleLogin(e) {
     showToast(`С возвращением, ${data.username}! 👋`, 'success')
     renderProfileHeader();
     renderProfileTracks();
-    updateTopbarAuth();
-    //showPage('profile');
+    // Если сейчас открыт профиль — обновляем его содержимое
+    if (document.getElementById('page-profile').classList.contains('active')) {
+      renderProfilePage();
+    }
 
   } catch (err) {
     showToast(err.message, 'error');
@@ -143,7 +164,9 @@ function logout() {
   localStorage.removeItem('token');
   currentUser = null;
   updateTopbarAuth();
-  showPage('home');
+  if (document.getElementById('page-profile').classList.contains('active')) {
+      renderProfilePage();
+    }
   showToast('Вы вышли из аккаунта', 'success');
 }
 
@@ -277,27 +300,108 @@ function updateTopbarAuth() {
 function renderProfileHeader() {
   if (!currentUser) return;
 
-  // Ник и handle
-  document.getElementById('profile-name').textContent = currentUser.username || 'Пользователь';
-  document.getElementById('profile-handle').innerHTML = `
-    @${currentUser.username?.replace('@','') || 'user'}
-    <span style="color:var(--text3)">· Москва, RU</span>
-  `;
-
-  // Аватар
+  // Защита от null
+  const nameEl = document.getElementById('profile-name');
+  const handleEl = document.getElementById('profile-handle');
   const avatarEl = document.getElementById('profile-avatar');
   const avatarTop = document.getElementById('profile-avatar-top');
-  avatarEl.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
-  avatarTop.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
 
-  // Кнопки для своего профиля
+  if (nameEl) nameEl.textContent = currentUser.username || 'Пользователь';
+  if (handleEl) handleEl.innerHTML = `
+    @${(currentUser.username || 'user').replace('@','')}
+    <span style="color:var(--text3)">· Москва, RU</span>
+  `;
+  if (avatarEl) avatarEl.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
+  if (avatarTop) avatarTop.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
+
   const actions = document.getElementById('profile-actions');
-  actions.innerHTML = `
-    <button onclick="alert('Редактирование профиля в разработке')" class="btn btn-outline-accent btn-ghost">Редактировать профиль</button>
+  if (actions) {
+    actions.innerHTML = `
+      <button onclick="alert('Редактирование профиля в разработке')" class="btn btn-outline-accent btn-ghost">Редактировать профиль</button>
+    `;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   РЕНДЕР ПРОФИЛЯ (с проверкой авторизации)
+   ────────────────────────────────────────────── */
+function renderProfilePage() {
+  const content = document.getElementById('profile-content');
+  if (!content) return;
+
+  if (!currentUser) {
+    // Не авторизован — пустая страница
+    content.innerHTML = `
+      <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; height:100%; color:var(--text2); text-align:center; padding:40px;">
+        <div style="font-size:72px; margin-bottom:24px; opacity:0.25;">👤</div>
+        <div style="font-family:'Syne',sans-serif; font-size:28px; font-weight:700; color:var(--text); margin-bottom:16px;">
+          Вы не авторизованы
+        </div>
+        <div style="font-size:16px; max-width:380px; line-height:1.6; margin-bottom:40px;">
+          Чтобы просматривать свой профиль, загружать треки и взаимодействовать с другими артистами — войдите или зарегистрируйтесь.
+        </div>
+        <button onclick="openAuthWithReset()" class="btn btn-accent" style="padding:14px 36px; font-size:15px;">
+          Войти / Зарегистрироваться
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  // Авторизован — нормальный профиль
+  content.innerHTML = `
+    <div class="topbar">
+      <button class="btn btn-ghost" style="gap:6px;display:flex;align-items:center;" onclick="showPage('home')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Назад
+      </button>
+      <div class="topbar-right">
+        <button onclick="logout()" class="btn btn-ghost" style="margin-right:12px;">Выйти</button>
+        <div class="avatar" onclick="showPage('profile')">${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}</div>
+      </div>
+    </div>
+
+    <div class="profile-hero">
+      <div class="hero-bg"></div>
+      <div class="hero-noise"></div>
+      <div class="hero-overlay"></div>
+      <div class="profile-info">
+        <div id="profile-avatar" class="profile-avatar">${currentUser.username ? currentUser.username[0].toUpperCase() : 'U'}</div>
+        <div class="profile-meta">
+          <div id="profile-name" class="profile-name">${currentUser.username || 'Пользователь'}</div>
+          <div id="profile-handle" class="profile-handle">@${(currentUser.username || 'user').replace('@','')} · Москва, RU</div>
+        </div>
+        <div id="profile-actions" class="profile-actions">
+          <button onclick="alert('Редактирование профиля в разработке')" class="btn btn-outline-accent btn-ghost">Редактировать профиль</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div class="profile-stats">
+          <div class="stat"><div id="stat-tracks" class="stat-val">—</div><div class="stat-key">Треков</div></div>
+          <div class="stat"><div id="stat-followers" class="stat-val">0</div><div class="stat-key">Подписчиков</div></div>
+          <div class="stat"><div id="stat-plays" class="stat-val">0</div><div class="stat-key">Прослушиваний</div></div>
+          <div class="stat"><div id="stat-following" class="stat-val">0</div><div class="stat-key">Подписан</div></div>
+        </div>
+        <div id="profile-bio" style="color:var(--text2);font-size:13px;max-width:320px;line-height:1.6;min-height:20px;"></div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="ptab active">Треки</div>
+        <div class="ptab">Плейлисты</div>
+        <div class="ptab">Лайки</div>
+        <div class="ptab">Информация</div>
+      </div>
+
+      <div class="profile-tracks" id="profile-tracks"></div>
+    </div>
   `;
 
-  // Статистика (реальное количество треков + заглушки)
-  document.getElementById('stat-tracks').textContent = '—'; // позже сделаем реальное
+  // Теперь безопасно обновляем шапку
+  renderProfileHeader();
+  renderProfileTracks();
 }
 
 /* ──────────────────────────────────────────────
@@ -356,13 +460,20 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCurrentUser();   // ←←← главное исправление
 });
 
-window.openUploadWithReset = () => {
-  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
-  if (!currentUser) return showToast('Сначала войди в аккаунт!', 'error');
-  showModal('upload-modal');
-};
-
+/* Глобальные функции для onclick в HTML */
+window.showModal = showModal;
+window.closeModal = closeModal;
+window.showPage = showPage;
+window.logout = logout;
 window.openAuthWithReset = () => {
   document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   showModal('auth-modal');
+};
+window.openUploadWithReset = () => {
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  if (!currentUser) {
+    showToast('Сначала войди в аккаунт!', 'error');
+    return;
+  }
+  showModal('upload-modal');
 };

@@ -259,7 +259,7 @@
 
 
 <!-- ═══════════════════════════════════════════════════
-     PAGE: ПРОФИЛЬ (ДИНАМИЧЕСКИЙ)
+     PAGE: ПРОФИЛЬ
      ═══════════════════════════════════════════════════ -->
 <div class="page" id="page-profile">
 
@@ -275,73 +275,10 @@
         Профиль
       </div>
     </div>
-    <div class="sidebar-bottom">
-      <div class="mini-player">
-        <div class="mini-track">Neon Pulse — Original Mix</div>
-        <div class="mini-artist">DJ Kartoff</div>
-        <div class="mini-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-        <div class="mini-controls">
-          <button class="mini-btn"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
-          <button class="mini-btn play-btn"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
-          <button class="mini-btn"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6zm8.5-6v6h2V6h-2z"/></svg></button>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <div class="content profile-layout">
-
-    <!-- Topbar профиля -->
-    <div class="topbar">
-      <button class="btn btn-ghost" style="gap:6px;display:flex;align-items:center;" onclick="showPage('home')">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-        Назад
-      </button>
-      <div class="topbar-right">
-        <button id="profile-action-btn" class="btn btn-accent">
-          Редактировать профиль
-        </button>
-        <div id="profile-avatar-top" class="avatar">DK</div>
-      </div>
-    </div>
-
-    <!-- Hero -->
-    <div class="profile-hero">
-      <div class="hero-bg"></div>
-      <div class="hero-noise"></div>
-      <div class="hero-overlay"></div>
-      <div class="profile-info">
-        <div id="profile-avatar" class="profile-avatar">DK</div>
-        <div class="profile-meta">
-          <div id="profile-name" class="profile-name">DJ Kartoff</div>
-          <div id="profile-handle" class="profile-handle">@djkartoff · Москва, RU</div>
-        </div>
-        <div id="profile-actions" class="profile-actions">
-          <!-- Кнопки будут меняться динамически -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Тело профиля -->
-    <div class="profile-body">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div class="profile-stats">
-          <div class="stat"><div id="stat-tracks" class="stat-val">0</div><div class="stat-key">Треков</div></div>
-          <div class="stat"><div id="stat-followers" class="stat-val">0</div><div class="stat-key">Подписчиков</div></div>
-          <div class="stat"><div id="stat-plays" class="stat-val">0</div><div class="stat-key">Прослушиваний</div></div>
-          <div class="stat"><div id="stat-following" class="stat-val">0</div><div class="stat-key">Подписан</div></div>
-        </div>
-      </div>
-
-      <div class="profile-tabs">
-        <div class="ptab active">Треки</div>
-        <div class="ptab">Плейлисты</div>
-        <div class="ptab">Лайки</div>
-        <div class="ptab">Информация</div>
-      </div>
-
-      <div class="profile-tracks" id="profile-tracks"></div>
-    </div>
+  <div class="content profile-layout" id="profile-content">
+    <!-- Динамически заполняется через JS -->
   </div>
 </div>
 <!-- /PAGE: ПРОФИЛЬ -->
