@@ -103,11 +103,11 @@ async function handleRegister(e) {
 
     clearAuthForms();
     closeModal('auth-modal');
-    showToast('✅ Регистрация прошла успешно!', 'success');
+    showToast(`Добро пожаловать, ${data.username}! 🎉`, 'success');
 
     renderProfileHeader();
     renderProfileTracks();
-    showPage('profile');
+    //showPage('profile');
 
   } catch (err) {
     showToast(err.message, 'error');
@@ -126,10 +126,10 @@ async function handleLogin(e) {
 
     clearAuthForms();
     closeModal('auth-modal');
-    showToast('✅ Вы успешно вошли в аккаунт!', 'success');
+    showToast(`С возвращением, ${data.username}! 👋`, 'success')
     renderProfileHeader();
     renderProfileTracks();
-    showPage('profile');
+    //showPage('profile');
 
   } catch (err) {
     showToast(err.message, 'error');
