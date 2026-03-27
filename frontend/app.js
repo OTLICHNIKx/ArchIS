@@ -233,11 +233,25 @@ async function handleRegister(e) {
   e.preventDefault();
 
   const username = document.getElementById('reg-username').value.trim();
+
+  if (username.startsWith('@')) {
+    username = username.substring(1);
+  }
+
   const email    = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
 
+  if (!username) {
+    alert('Введите имя пользователя');
+    return;
+  }
+
   try {
-    const data = await apiRequest('/auth/register', 'POST', { username, email, password });
+    const data = await apiRequest('/auth/register', 'POST', {
+        username,
+        email,
+        password
+    });
 
     localStorage.setItem('token', data.token);
     closeModal('auth-modal');
