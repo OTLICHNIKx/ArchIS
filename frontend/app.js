@@ -80,6 +80,16 @@ function switchTab(tab) { /* оставил твой оригинальный к
 /* ──────────────────────────────────────────────
    АВТОРИЗАЦИЯ
    ────────────────────────────────────────────── */
+function clearAuthForms() {
+  // Очищаем все поля
+  document.getElementById('reg-username').value = '';
+  document.getElementById('reg-email').value = '';
+  document.getElementById('reg-password').value = '';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+}
+
+
 async function handleRegister(e) {
   e.preventDefault();
   const username = document.getElementById('reg-username').value.trim();
@@ -90,9 +100,15 @@ async function handleRegister(e) {
     const data = await apiRequest('/auth/register', 'POST', { username, email, password });
     localStorage.setItem('token', data.token);
     currentUser = data;
+
+    clearAuthForms();
     closeModal('auth-modal');
     showToast('✅ Регистрация прошла успешно!', 'success');
+
+    renderProfileHeader();
     renderProfileTracks();
+    showPage('profile');
+
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -107,9 +123,14 @@ async function handleLogin(e) {
     const data = await apiRequest('/auth/login', 'POST', { email, password });
     localStorage.setItem('token', data.token);
     currentUser = data;
+
+    clearAuthForms();
     closeModal('auth-modal');
     showToast('✅ Вы успешно вошли в аккаунт!', 'success');
+    renderProfileHeader();
     renderProfileTracks();
+    showPage('profile');
+
   } catch (err) {
     showToast(err.message, 'error');
   }
