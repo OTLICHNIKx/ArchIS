@@ -71,9 +71,21 @@ function closeModal(id) {
 }
 
 // Закрытие кликом по оверлею (вне .modal)
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => {
-    if (e.target === el) el.classList.remove('open');
+// Закрытие модалки по клику на оверлей (исправленная версия)
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('mousedown', function(e) {
+    // Запоминаем, на каком элементе началось нажатие
+    overlay.dataset.mouseDownTarget = e.target;
+  });
+
+  overlay.addEventListener('mouseup', function(e) {
+    // Закрываем ТОЛЬКО если нажатие началось на самом оверлее
+    // и отпускание тоже произошло на оверлее
+    if (overlay.dataset.mouseDownTarget === overlay && e.target === overlay) {
+      overlay.classList.remove('open');
+    }
+    // Очищаем данные
+    delete overlay.dataset.mouseDownTarget;
   });
 });
 
@@ -189,6 +201,12 @@ renderProfileTracks();
 document.addEventListener('DOMContentLoaded', () => {
   // Убеждаемся, что стартовая страница — главная
   showPage('home');
+
+  document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        e.stopPropagation();   // предотвращает случайное закрытие
+      });
+    });
 });
 
 function openUploadWithReset() {
