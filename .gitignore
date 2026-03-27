@@ -206,3 +206,6 @@ Thumbs.db
 # PostMan
 .postman/
 postman/
+
+# Tracks
+\uploads
