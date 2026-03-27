@@ -43,6 +43,7 @@ async function loadCurrentUser() {
     console.warn('Не удалось загрузить пользователя (токен устарел?)');
     localStorage.removeItem('token');
   }
+  renderProfileHeader();
 }
 
 /* ──────────────────────────────────────────────
@@ -210,6 +211,35 @@ async function handleTrackUpload() {
     console.error('❌ Ошибка в handleTrackUpload:', err);
     showToast(err.message || 'Ошибка загрузки трека', 'error');
   }
+}
+
+/* ──────────────────────────────────────────────
+   РЕНДЕР ШАПКИ ПРОФИЛЯ (реальные данные)
+   ────────────────────────────────────────────── */
+function renderProfileHeader() {
+  if (!currentUser) return;
+
+  // Ник и handle
+  document.getElementById('profile-name').textContent = currentUser.username || 'Пользователь';
+  document.getElementById('profile-handle').innerHTML = `
+    @${currentUser.username?.replace('@','') || 'user'}
+    <span style="color:var(--text3)">· Москва, RU</span>
+  `;
+
+  // Аватар
+  const avatarEl = document.getElementById('profile-avatar');
+  const avatarTop = document.getElementById('profile-avatar-top');
+  avatarEl.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
+  avatarTop.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
+
+  // Кнопки для своего профиля
+  const actions = document.getElementById('profile-actions');
+  actions.innerHTML = `
+    <button onclick="alert('Редактирование профиля в разработке')" class="btn btn-outline-accent btn-ghost">Редактировать профиль</button>
+  `;
+
+  // Статистика (реальное количество треков + заглушки)
+  document.getElementById('stat-tracks').textContent = '—'; // позже сделаем реальное
 }
 
 /* ──────────────────────────────────────────────

@@ -262,7 +262,7 @@
 
 
 <!-- ═══════════════════════════════════════════════════
-     PAGE: ПРОФИЛЬ
+     PAGE: ПРОФИЛЬ (ДИНАМИЧЕСКИЙ)
      ═══════════════════════════════════════════════════ -->
 <div class="page" id="page-profile">
 
@@ -301,11 +301,10 @@
         Назад
       </button>
       <div class="topbar-right">
-        <button class="btn btn-accent" onclick="showModal('upload-modal')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;display:inline;"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-          Загрузить трек
+        <button id="profile-action-btn" class="btn btn-accent">
+          Редактировать профиль
         </button>
-        <div class="avatar">DK</div>
+        <div id="profile-avatar-top" class="avatar">DK</div>
       </div>
     </div>
 
@@ -315,14 +314,13 @@
       <div class="hero-noise"></div>
       <div class="hero-overlay"></div>
       <div class="profile-info">
-        <div class="profile-avatar">DK</div>
+        <div id="profile-avatar" class="profile-avatar">DK</div>
         <div class="profile-meta">
-          <div class="profile-name">DJ Kartoff</div>
-          <div class="profile-handle">@djkartoff · Москва, RU</div>
+          <div id="profile-name" class="profile-name">DJ Kartoff</div>
+          <div id="profile-handle" class="profile-handle">@djkartoff · Москва, RU</div>
         </div>
-        <div class="profile-actions">
-          <button class="btn btn-outline-accent btn-ghost">Подписаться</button>
-          <button class="btn btn-accent">Написать</button>
+        <div id="profile-actions" class="profile-actions">
+          <!-- Кнопки будут меняться динамически -->
         </div>
       </div>
     </div>
@@ -331,14 +329,14 @@
     <div class="profile-body">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div class="profile-stats">
-          <div class="stat"><div class="stat-val">34</div><div class="stat-key">Треков</div></div>
-          <div class="stat"><div class="stat-val">88K</div><div class="stat-key">Подписчиков</div></div>
-          <div class="stat"><div class="stat-val">1.2M</div><div class="stat-key">Прослушиваний</div></div>
-          <div class="stat"><div class="stat-val">412</div><div class="stat-key">Подписан</div></div>
+          <div class="stat"><div id="stat-tracks" class="stat-val">0</div><div class="stat-key">Треков</div></div>
+          <div class="stat"><div id="stat-followers" class="stat-val">0</div><div class="stat-key">Подписчиков</div></div>
+          <div class="stat"><div id="stat-plays" class="stat-val">0</div><div class="stat-key">Прослушиваний</div></div>
+          <div class="stat"><div id="stat-following" class="stat-val">0</div><div class="stat-key">Подписан</div></div>
         </div>
-        <div style="color:var(--text2);font-size:13px;max-width:320px;line-height:1.6;">
+        <div id="profile-bio" style="color:var(--text2);font-size:13px;max-width:320px;line-height:1.6;">
           Электронная музыка, house, techno.<br>
-          Публикую ориги и миксы с 2018 года. <span style="color:var(--accent);">Korolyov Production</span>
+          Публикую ориги и миксы с 2018 года.
         </div>
       </div>
 
@@ -349,14 +347,11 @@
         <div class="ptab">Информация</div>
       </div>
 
-      <!-- Треки рендерятся через app.js -->
       <div class="profile-tracks" id="profile-tracks"></div>
     </div>
-
   </div>
 </div>
 <!-- /PAGE: ПРОФИЛЬ -->
-
 
 <!-- ═══════════════════════════════════════════════════
      MODAL: Авторизация / Регистрация
