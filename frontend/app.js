@@ -435,10 +435,10 @@ async function renderProfileTracks() {
     const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
     container.innerHTML = tracks.map(t => {
-      // Если есть обложка — используем её, иначе градиент
-      const coverStyle = t.coverUrl
-        ? `background-image: url('${t.coverUrl}'); background-size: cover; background-position: center;`
-        : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
+     // Если есть обложка — используем её, иначе градиент
+    const coverStyle = t.coverUrl
+      ? `background-image: url('http://localhost:5000${t.coverUrl}'); background-size: cover; background-position: center;`
+      : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
 
       return `
         <div class="profile-track">
