@@ -602,6 +602,8 @@ async function renderArtistProfile(artistId) {
   try {
     const data = await apiRequest(`/artists/${artistId}`);
 
+    const handle = `@${data.username || data.name}`;
+
     content.innerHTML = `
       <div class="topbar">
         <button class="btn btn-ghost" onclick="showPage('home')">← Назад</button>
@@ -613,10 +615,12 @@ async function renderArtistProfile(artistId) {
         <div class="hero-noise"></div>
         <div class="hero-overlay"></div>
         <div class="profile-info">
-          <div class="profile-avatar" style="background:linear-gradient(135deg,#7c3aed,#f97316);">${data.name[0]}</div>
+          <div class="profile-avatar" style="background:linear-gradient(135deg,#7c3aed,#f97316);">
+            ${(data.username || '?')[0].toUpperCase()}
+          </div>
           <div class="profile-meta">
-            <div class="profile-name">${data.name}</div>
-            <div class="profile-handle">@${data.name.toLowerCase().replace('artist_','')}</div>
+            <div class="profile-name">${data.name || data.username}</div>
+            <div class="profile-handle">${handle}</div>
           </div>
         </div>
       </div>
@@ -626,17 +630,19 @@ async function renderArtistProfile(artistId) {
           <div class="stat"><div class="stat-val">${data.totalSongs}</div><div class="stat-key">Треков</div></div>
         </div>
 
+        ${data.bio ? `<div style="color:var(--text2); margin-bottom:24px; font-size:14px;">${data.bio}</div>` : ''}
+
         <div class="profile-tracks" id="artist-tracks"></div>
       </div>
     `;
 
-    // рендер треков с плеером
+    // Рендер треков
     const container = document.getElementById('artist-tracks');
     const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
     container.innerHTML = data.songs.map(t => {
       const coverStyle = t.coverUrl
-        ? `background-image:url('http://localhost:5000${t.coverUrl}');background-size:cover;`
+        ? `background-image:url('http://localhost:5000${t.coverUrl}');background-size:cover;background-position:center;`
         : `background:linear-gradient(135deg,#7c3aed,#f97316);`;
 
       return `
@@ -653,6 +659,7 @@ async function renderArtistProfile(artistId) {
     }).join('');
 
   } catch (e) {
+    console.error(e);
     content.innerHTML = `<div style="padding:40px;color:var(--text2);text-align:center;">Артист не найден</div>`;
   }
 }
