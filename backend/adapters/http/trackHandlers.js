@@ -178,6 +178,32 @@ const uploadCover = [
   }
 ];
 
+// ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
+const searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) return res.json([]);
+
+    const User = require('../models/User');
+
+    const users = await User.find({
+      username: { $regex: q, $options: 'i' }
+    })
+    .select('_id username avatar bio')
+    .limit(10)
+    .lean();
+
+    res.json(users.map(u => ({
+      id: u._id,
+      username: u.username,
+      avatar: u.avatar,
+      bio: u.bio || 'Артист OtlichnikMusic'
+    })));
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
 module.exports = {
   createTrack,
   uploadAudio,
@@ -191,4 +217,5 @@ module.exports = {
   getArtist,
   RepostTrack,
   uploadCover,
+  searchUsers,
 };
