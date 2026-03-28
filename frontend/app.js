@@ -27,6 +27,9 @@ async function apiRequest(path, method = 'GET', body = null) {
 let currentUser = null;
 let selectedFile = null;
 let selectedCover = null;
+let audioPlayer = null;
+let currentPlayingTrack = null;
+let currentArtistProfileId = null;   // для публичного профиля
 
 /* ──────────────────────────────────────────────
    ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (главное исправление)
@@ -498,8 +501,166 @@ document.addEventListener('DOMContentLoaded', () => {
   initCoverUpload();
   generateWave('wave1'); generateWave('wave2'); generateWave('wave3'); generateWave('wave4');
 
+  initAudioPlayer();
+  initSearch();
+
   loadCurrentUser();   // ←←← главное исправление
 });
+
+/* ====================== ГЛОБАЛЬНЫЙ ПЛЕЕР ====================== */
+function initAudioPlayer() {
+  audioPlayer = document.createElement('audio');
+  audioPlayer.style.display = 'none';
+  document.body.appendChild(audioPlayer);
+
+  audioPlayer.addEventListener('ended', () => {
+    currentPlayingTrack = null;
+    updateMiniPlayer();
+  });
+}
+
+function playTrack(track) {
+  if (!track?.audioUrl) {
+    return showToast('Трек ещё не обработан', 'error');
+  }
+  const fullUrl = `http://localhost:5000${track.audioUrl}`;
+
+  if (!audioPlayer || audioPlayer.src !== fullUrl) {
+    audioPlayer.src = fullUrl;
+  }
+  audioPlayer.play().catch(() => showToast('Не удалось воспроизвести', 'error'));
+
+  currentPlayingTrack = track;
+  updateMiniPlayer(track);
+}
+
+function updateMiniPlayer(track = currentPlayingTrack) {
+  const nameEl = document.getElementById('mini-track-name');
+  const artistEl = document.getElementById('mini-artist-name');
+  if (!nameEl || !artistEl) return;
+
+  if (track) {
+    nameEl.textContent = track.title;
+    artistEl.textContent = track.artistName || 'Unknown';
+  } else {
+    nameEl.textContent = 'OTLICHNIK — Тождество Эйлера';
+    artistEl.textContent = 'OTLICHNIK';
+  }
+}
+
+/* ====================== ПОИСК ====================== */
+function initSearch() {
+  const input = document.getElementById('search-input');
+  const dropdown = document.getElementById('search-dropdown');
+  let timeout;
+
+  input.addEventListener('input', () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      const q = input.value.trim();
+      if (q.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      fetch(`${API_URL}/search/users?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(users => {
+          if (users.length === 0) {
+            dropdown.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text2);">Ничего не найдено</div>`;
+          } else {
+            dropdown.innerHTML = users.map(u => `
+              <div class="search-result" onclick="viewArtistProfile('${u.id}')">
+                <div class="search-avatar">${u.username[0].toUpperCase()}</div>
+                <div>
+                  <div style="font-weight:600;">${u.username}</div>
+                  <div style="font-size:12px;color:var(--text2);">${u.bio}</div>
+                </div>
+              </div>
+            `).join('');
+          }
+          dropdown.style.display = 'block';
+        });
+    }, 250);
+  });
+
+  // клик вне поиска — скрыть
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrapper')) dropdown.style.display = 'none';
+  });
+}
+
+window.viewArtistProfile = async function(artistId) {
+  document.getElementById('search-dropdown').style.display = 'none';
+  currentArtistProfileId = artistId;
+  showPage('artist');
+  renderArtistProfile(artistId);
+};
+
+/* ====================== ПУБЛИЧНЫЙ ПРОФИЛЬ ====================== */
+async function renderArtistProfile(artistId) {
+  const content = document.getElementById('artist-content');
+  try {
+    const data = await apiRequest(`/artists/${artistId}`);
+
+    content.innerHTML = `
+      <div class="topbar">
+        <button class="btn btn-ghost" onclick="showPage('home')">← Назад</button>
+        <div class="topbar-right" id="topbar-auth"></div>
+      </div>
+
+      <div class="profile-hero">
+        <div class="hero-bg"></div>
+        <div class="hero-noise"></div>
+        <div class="hero-overlay"></div>
+        <div class="profile-info">
+          <div class="profile-avatar" style="background:linear-gradient(135deg,#7c3aed,#f97316);">${data.name[0]}</div>
+          <div class="profile-meta">
+            <div class="profile-name">${data.name}</div>
+            <div class="profile-handle">@${data.name.toLowerCase().replace('artist_','')}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-body">
+        <div class="profile-stats">
+          <div class="stat"><div class="stat-val">${data.totalSongs}</div><div class="stat-key">Треков</div></div>
+        </div>
+
+        <div class="profile-tracks" id="artist-tracks"></div>
+      </div>
+    `;
+
+    // рендер треков с плеером
+    const container = document.getElementById('artist-tracks');
+    const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+
+    container.innerHTML = data.songs.map(t => {
+      const coverStyle = t.coverUrl
+        ? `background-image:url('http://localhost:5000${t.coverUrl}');background-size:cover;`
+        : `background:linear-gradient(135deg,#7c3aed,#f97316);`;
+
+      return `
+        <div class="profile-track">
+          <div class="pt-cover trending-cover" style="${coverStyle}" onclick="playTrackFromArtist(${JSON.stringify(t).replace(/"/g,'&quot;')})"></div>
+          <div class="pt-info">
+            <div class="pt-title">${t.title}</div>
+            <div class="pt-date">${t.artistName}</div>
+          </div>
+          <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
+          <div class="pt-duration">${Math.floor(t.duration/60)}:${(t.duration%60).toString().padStart(2,'0')}</div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (e) {
+    content.innerHTML = `<div style="padding:40px;color:var(--text2);text-align:center;">Артист не найден</div>`;
+  }
+}
+
+window.playTrackFromArtist = function(trackStr) {
+  const track = JSON.parse(trackStr);
+  playTrack(track);
+};
 
 /* Глобальные функции для onclick в HTML */
 window.showModal = showModal;

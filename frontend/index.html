@@ -98,12 +98,13 @@
 
     <!-- Topbar -->
     <div class="topbar">
-      <div class="search-box">
-        <svg width="14" height="14" fill="none" stroke="#4a4852" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" placeholder="Артисты, треки, жанры…">
-      </div>
-      <div class="topbar-right" id="topbar-auth">
-      </div>
+      <div class="search-wrapper" style="position:relative; flex:1; max-width:420px;">
+          <div class="search-box">
+            <svg width="14" height="14" fill="none" stroke="#4a4852" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="search-input" placeholder="Артисты, треки, жанры…">
+          </div>
+          <div id="search-dropdown" class="search-dropdown"></div>
+        </div>
     </div>
 
     <!-- Лента -->
@@ -282,6 +283,23 @@
   </div>
 </div>
 <!-- /PAGE: ПРОФИЛЬ -->
+
+<!-- PAGE: ПУБЛИЧНЫЙ ПРОФИЛЬ АРТИСТА -->
+<div class="page" id="page-artist">
+  <div class="sidebar">
+    <div class="logo"><div class="logo-icon"></div>OtlichnikMusic</div>
+    <div class="nav-section">
+      <div class="nav-item" onclick="showPage('home')">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Главная
+      </div>
+    </div>
+  </div>
+
+  <div class="content profile-layout" id="artist-content">
+    <!-- Заполняется динамически через renderArtistProfile() -->
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════════
      MODAL: Авторизация / Регистрация
