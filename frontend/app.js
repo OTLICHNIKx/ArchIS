@@ -26,6 +26,7 @@ async function apiRequest(path, method = 'GET', body = null) {
    ────────────────────────────────────────────── */
 let currentUser = null;
 let selectedFile = null;
+let selectedCover = null;
 
 /* ──────────────────────────────────────────────
    ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (главное исправление)
@@ -222,7 +223,7 @@ function handleFile(file) {
   document.getElementById('drop-zone').innerHTML = `<p>✓ ${file.name} выбран</p>`;
 }
 
-/* Загрузка трека с именем артиста */
+/* Обновлённая загрузка трека (с обложкой) */
 async function handleTrackUpload() {
   if (!currentUser || !currentUser._id) return showToast('Сначала войди!', 'error');
   if (!selectedFile) return showToast('Выбери аудиофайл!', 'error');
@@ -242,32 +243,40 @@ async function handleTrackUpload() {
   const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
 
   try {
+    // 1. Создаём трек (метаданные)
     const trackResponse = await apiRequest(`/artists/${currentUser._id}/tracks`, 'POST', {
-      title,
-      artistName,           // ← новое поле
-      genre,
-      tags,
-      description,
-      duration,
-      isPublic
+      title, artistName, genre, tags, description, duration, isPublic
     });
 
     const trackId = trackResponse.track_id || trackResponse._id || trackResponse.id;
 
-    // Загрузка файла
-    const formData = new FormData();
-    formData.append('audio', selectedFile);
+    // 2. Загружаем аудио
+    const audioForm = new FormData();
+    audioForm.append('audio', selectedFile);
     await fetch(`${API_URL}/artists/${trackId}/audio`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      body: formData
+      body: audioForm
     });
 
+    // 3. Загружаем обложку (если выбрана)
+    if (selectedCover) {
+      const coverForm = new FormData();
+      coverForm.append('cover', selectedCover);
+      await fetch(`${API_URL}/artists/${trackId}/cover`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: coverForm
+      });
+    }
+
+    // 4. Публикуем
     await apiRequest(`/artists/${trackId}/publish`, 'POST');
 
-    showToast('🎵 Трек успешно опубликован!', 'success');
+    showToast('🎵 Трек с обложкой успешно опубликован!', 'success');
     closeModal('upload-modal');
     selectedFile = null;
+    selectedCover = null;
     renderProfileTracks();
   } catch (err) {
     showToast(err.message || 'Ошибка загрузки', 'error');
@@ -413,27 +422,51 @@ function renderProfilePage() {
 /* ──────────────────────────────────────────────
    ПРОФИЛЬ + ВОЛНЫ + TOAST
    ────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────
+   РЕНДЕР ТРЕКОВ В ПРОФИЛЕ (с обложкой)
+   ────────────────────────────────────────────── */
 async function renderProfileTracks() {
   const container = document.getElementById('profile-tracks');
   if (!container || !currentUser) return;
 
   try {
     const tracks = await apiRequest('/artists/tracks');
+
     const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-    container.innerHTML = tracks.map(t => `
-      <div class="profile-track">
-        <div class="trending-num" style="color:var(--text3);">${PLAY_ICON}</div>
-        <div class="pt-cover trending-cover" style="background: linear-gradient(135deg, #7c3aed, #f97316);"></div>
-        <div class="pt-info">
-          <div class="pt-title">${t.title}</div>
-          <div class="pt-date">${t.artistName || currentUser?.username || 'Неизвестный артист'}</div>
+
+    container.innerHTML = tracks.map(t => {
+     // Если есть обложка — используем её, иначе градиент
+    const coverStyle = t.coverUrl
+      ? `background-image: url('http://localhost:5000${t.coverUrl}'); background-size: cover; background-position: center;`
+      : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
+
+      return `
+        <div class="profile-track">
+          <div class="pt-cover trending-cover" style="${coverStyle}"></div>
+
+          <div class="pt-info">
+            <div class="pt-title">${t.title}</div>
+            <div class="pt-date">${t.artistName || currentUser.username}</div>
+          </div>
+
+          <div class="pt-wave">
+            ${Array.from({length: 24}, () =>
+              `<div class="ptb" style="height:${4 + Math.random()*22}px"></div>`
+            ).join('')}
+          </div>
+
+          <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
+          <div class="pt-duration">
+            ${t.duration ? Math.floor(t.duration/60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '0:00'}
+          </div>
         </div>
-        <div class="pt-wave">${Array.from({length:24},()=>`<div class="ptb" style="height:${4+Math.random()*22}px"></div>`).join('')}</div>
-        <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
-        <div class="pt-duration">${t.duration ? Math.floor(t.duration/60)+':'+(t.duration%60).toString().padStart(2,'0') : '0:00'}</div>
-      </div>
-    `).join('');
-  } catch (e) { console.log('Нет треков'); }
+      `;
+    }).join('');
+
+  } catch (e) {
+    console.log('Нет треков или ошибка загрузки');
+    container.innerHTML = `<div style="padding:20px;color:var(--text2);text-align:center;">Пока нет треков</div>`;
+  }
 }
 
 function generateWave(id, count = 40) { /* твой оригинальный код */
@@ -462,6 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
   showPage('home');
   initUploadModal();
   initModalCloseBehavior();
+  initCoverUpload();
   generateWave('wave1'); generateWave('wave2'); generateWave('wave3'); generateWave('wave4');
 
   loadCurrentUser();   // ←←← главное исправление
@@ -498,5 +532,41 @@ function initModalCloseBehavior() {
 
   document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', e => e.stopPropagation());
+  });
+}
+
+/* Обработка выбора обложки */
+function handleCoverFile(file) {
+  if (!file.type.startsWith('image/')) {
+    return showToast('Только JPG или PNG!', 'error');
+  }
+  selectedCover = file;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const thumb = document.getElementById('cover-thumb');
+    thumb.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* Drag & Drop + клик для обложки */
+function initCoverUpload() {
+  const area = document.getElementById('cover-upload-area');
+  const input = document.getElementById('cover-file');
+
+  input.addEventListener('change', e => {
+    if (e.target.files.length) handleCoverFile(e.target.files[0]);
+  });
+
+  area.addEventListener('dragover', e => {
+    e.preventDefault();
+    area.style.borderColor = 'var(--accent)';
+  });
+  area.addEventListener('dragleave', () => area.style.borderColor = 'var(--border)');
+  area.addEventListener('drop', e => {
+    e.preventDefault();
+    area.style.borderColor = 'var(--border)';
+    if (e.dataTransfer.files.length) handleCoverFile(e.dataTransfer.files[0]);
   });
 }

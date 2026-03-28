@@ -4,18 +4,18 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  // Более гибкая проверка — принимаем ВСЕ аудио-форматы
-  if (file.mimetype.startsWith('audio/')) {
+  // Разрешаем и аудио, и изображения (для обложек)
+  if (file.mimetype.startsWith('audio/') || file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Файл должен быть аудио (MP3, WAV, FLAC, AAC, OGG и другие аудиоформаты)'), false);
+    cb(new Error('Разрешены только аудио и изображения (JPG, PNG)'), false);
   }
 };
 
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 500 * 1024 * 1024 } // до 500 МБ
+  limits: { fileSize: 500 * 1024 * 1024 } // 500 МБ
 });
 
 module.exports = upload;

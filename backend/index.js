@@ -22,6 +22,9 @@ app.use('/graphql', graphqlAdapter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Статическая раздача загруженных файлов
+app.use('/uploads', express.static('uploads'));
+
 // REST-роуты
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api', require('./routes/tracks'));

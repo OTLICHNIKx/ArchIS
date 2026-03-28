@@ -159,6 +159,25 @@ const RepostTrack = async (req, res) => {
   }
 };
 
+// 10. Загрузить обложку — POST /api/artists/:trackId/cover
+const uploadCover = [
+  protect,
+  uploadMiddleware.single('cover'),   // поле в форме должно называться "cover"
+  async (req, res) => {
+    try {
+      const artistId = req.user._id;
+      const { trackId } = req.params;
+      const fileBuffer = req.file.buffer;
+      const originalFilename = req.file.originalname;
+
+      const result = await container.uploadCover(trackId, artistId, fileBuffer, originalFilename);
+      res.json(result);
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+];
+
 module.exports = {
   createTrack,
   uploadAudio,
@@ -170,5 +189,6 @@ module.exports = {
   updateTrackMetadata,
   getPopularTags,
   getArtist,
-  RepostTrack
+  RepostTrack,
+  uploadCover,
 };

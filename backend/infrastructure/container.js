@@ -22,8 +22,10 @@ const makeGetTrack            = require('../usecases/getTrack');
 const makeUpdateTrackMetadata = require('../usecases/updateTrackMetadata');
 const makeGetPopularTags      = require('../usecases/getPopularTags');
 const makeUploadAudio         = require('../usecases/uploadAudio');
-const makeRepostTrack          = require('../usecases/RepostTrack');
+const makeUploadCover         = require('../usecases/uploadCover');
+const makeRepostTrack         = require('../usecases/RepostTrack');
 const makeGetArtist           = require('../usecases/getArtist');
+
 
 // Создаём реализации
 const trackRepository     = new MongoTrackRepository();
@@ -44,6 +46,7 @@ const container = {
   updateTrackMetadata: makeUpdateTrackMetadata({ trackRepository }),
   getPopularTags:      makeGetPopularTags({ tagRepository }),
   uploadAudio:         makeUploadAudio({ trackRepository, fileStorage }),
+  uploadCover:         makeUploadCover({ trackRepository, fileStorage }),
   RepostTrack:          makeRepostTrack({ trackRepository, repostRepository, notificationService }),
   getArtist:           makeGetArtist({ trackRepository }),
 };

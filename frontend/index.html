@@ -374,6 +374,19 @@
 
     <!-- Скрытый input для файла (ОБЯЗАТЕЛЬНО!) -->
     <input type="file" id="audio-file" accept="audio/*" hidden>
+    <input type="file" id="cover-file" accept="image/jpeg,image/png" hidden>
+
+      <!-- Обложка -->
+    <div class="cover-upload" id="cover-upload-area" onclick="document.getElementById('cover-file').click()">
+      <div id="cover-thumb" class="cover-thumb">
+        <span style="font-size:28px;">📷</span>
+      </div>
+      <div class="cover-text">
+        <div class="t1">Обложка трека</div>
+        <div class="t2">JPG, PNG — минимум 500×500 px</div>
+      </div>
+      <button type="button" class="btn btn-ghost" style="margin-left:auto;">Выбрать</button>
+    </div>
 
     <div id="drop-zone" class="drop-zone">
       <div class="drop-icon">
@@ -395,28 +408,25 @@
       <input id="track-title" class="form-input" type="text" placeholder="Neon Pulse">
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Жанр</label>
-        <select id="track-genre" class="form-input">
-          <option value="">Выбрать жанр</option>
-          <option value="Electronic">Electronic</option>
-          <option value="House">House</option>
-          <option value="Techno">Techno</option>
-          <option value="Ambient">Ambient</option>
-          <option value="Hip-Hop">Hip-Hop</option>
-          <option value="Lo-Fi">Lo-Fi</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Длительность (сек)</label>
-        <input id="track-duration" class="form-input" type="number" placeholder="180" min="1">
-      </div>
+      <!-- Жанр теперь на всю ширину -->
+    <div class="form-group">
+      <label class="form-label">Жанр</label>
+      <select id="track-genre" class="form-input">
+        <option value="">Выбрать жанр</option>
+        <option value="Electronic">Electronic</option>
+        <option value="House">House</option>
+        <option value="Techno">Techno</option>
+        <option value="Ambient">Ambient</option>
+        <option value="Hip-Hop">Hip-Hop</option>
+        <option value="Lo-Fi">Lo-Fi</option>
+      </select>
     </div>
 
     <div class="form-group">
       <label class="form-label">Описание</label>
-      <textarea id="track-desc" class="form-input" rows="3" placeholder="Расскажи о треке…"></textarea>
+      <textarea id="track-desc" class="form-input" rows="4"
+                placeholder="Расскажи о треке…"
+                style="resize:vertical; max-height:180px;"></textarea>
     </div>
 
     <div class="form-group">
