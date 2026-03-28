@@ -28,17 +28,19 @@ function makeGetArtist({ trackRepository }) {
     const tracks = await trackRepository.findAllByArtist(artistId);
 
     // Фильтруем только публичные треки
-    const publicTracks = tracks.filter(track => track.isPublic !== false);
+    const publicTracks = tracks.filter(track =>
+        track.isPublic !== false && track.status === 'PUBLISHED'
+    );
 
     return {
-      id: artistId,
+      id: String(artistId),
       username: artistUser.username,                    // настоящее имя пользователя
       name: artistUser.username,                        // для отображения как "Имя артиста"
       avatar: artistUser.avatar,
       bio: artistUser.bio || "Артист платформы OtlichnikMusic",
 
       songs: publicTracks.map(track => ({
-        id: track._id,
+        id: String(track._id),
         title: track.title,
         genre: track.genre,
         duration: track.duration,

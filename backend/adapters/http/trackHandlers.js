@@ -4,6 +4,7 @@
 const container = require('../../infrastructure/container');
 const uploadMiddleware = require('../../middleware/upload');
 const { protect } = require('../../middleware/auth');
+const User = require('../../models/User');
 
 /* ====================== ПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================== */
 const handleError = (res, error) => {
@@ -178,23 +179,25 @@ const uploadCover = [
   }
 ];
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
 const searchUsers = async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q || q.length < 2) {
+    const q = String(req.query.q || '').trim();
+
+    if (q.length < 2) {
       return res.json([]);
     }
 
-    // Правильный путь к модели из trackHandlers.js
-    const User = require('../../models/User');
+    const safeQ = escapeRegex(q);
 
     const users = await User.find({
-      username: { $regex: q, $options: 'i' }
+      username: { $regex: safeQ, $options: 'i' }
     })
-    .select('_id username avatar bio')
-    .limit(10)
-    .lean();
+      .select('_id username avatar bio')
+      .limit(10)
+      .lean();
 
     res.json(users.map(u => ({
       id: u._id,
@@ -202,12 +205,12 @@ const searchUsers = async (req, res) => {
       avatar: u.avatar,
       bio: u.bio || 'Артист OtlichnikMusic'
     })));
-
   } catch (error) {
     console.error('Search users error:', error.message);
-    handleError(res, error);   // используем уже существующую функцию обработки ошибок
+    handleError(res, error);
   }
 };
+
 
 module.exports = {
   createTrack,

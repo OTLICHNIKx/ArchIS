@@ -19,7 +19,6 @@ const ALLOWED_GENRES = [
 ];
 
 /* ─── Бизнес-правила валидации метаданных ─── */
-/* ─── Бизнес-правила валидации метаданных ─── */
 function validateTrackMetadata({ title, genre, tags, description, duration }) {
   const errors = [];
 
@@ -44,8 +43,8 @@ function validateTrackMetadata({ title, genre, tags, description, duration }) {
 
   // Длительность больше НЕ обязательна при создании метаданных
   // (будет заполнена позже при загрузке аудио или оставлена 0)
-  if (duration !== undefined && duration !== null && duration <= 0) {
-    errors.push('Длительность должна быть больше 0');
+  if (duration !== undefined && duration !== null && duration < 0) {
+     errors.push('Длительность не может быть отрицательной');
   }
 
   return errors;

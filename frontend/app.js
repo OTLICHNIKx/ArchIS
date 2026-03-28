@@ -114,8 +114,10 @@ function clearAuthForms() {
 
 async function handleRegister(e) {
   e.preventDefault();
-  const username = document.getElementById('reg-username').value.trim();
-  if (username.startsWith('@')) username = username.substring(1);
+  let username = document.getElementById('reg-username').value.trim();
+  if (username.startsWith('@')) {
+      username = username.substring(1);
+    }
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
 
@@ -277,9 +279,7 @@ async function handleTrackUpload() {
   if (!genre) {
     return showToast('Выберите жанр!', 'error');
   }
-  //if (!duration || duration <= 0) {
-  //  return showToast('Укажите длительность трека!', 'error');
-  //}
+
   if (!selectedFile) {
     return showToast('Выбери аудиофайл!', 'error');
   }
@@ -615,40 +615,66 @@ function updateMiniPlayer(track = currentPlayingTrack) {
 function initSearch() {
   const input = document.getElementById('search-input');
   const dropdown = document.getElementById('search-dropdown');
+  if (!input || !dropdown) return;
   let timeout;
 
   input.addEventListener('input', () => {
     clearTimeout(timeout);
-    timeout = setTimeout(() => {
+
+    timeout = setTimeout(async () => {
       const q = input.value.trim();
+
       if (q.length < 2) {
         dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
         return;
       }
-      fetch(`${API_URL}/search/users?q=${encodeURIComponent(q)}`)
-        .then(r => r.json())
-        .then(users => {
-          if (users.length === 0) {
-            dropdown.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text2);">Ничего не найдено</div>`;
-          } else {
-            dropdown.innerHTML = users.map(u => `
-              <div class="search-result" onclick="viewArtistProfile('${u.id}')">
-                <div class="search-avatar">${u.username[0].toUpperCase()}</div>
-                <div>
-                  <div style="font-weight:600;">${u.username}</div>
-                  <div style="font-size:12px;color:var(--text2);">${u.bio}</div>
-                </div>
+
+      try {
+        const res = await fetch(`${API_URL}/search/users?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Ошибка поиска');
+        }
+
+        const users = Array.isArray(data) ? data : [];
+
+        if (users.length === 0) {
+          dropdown.innerHTML = `
+            <div style="padding:20px;text-align:center;color:var(--text2);">
+              Ничего не найдено
+            </div>
+          `;
+        } else {
+          dropdown.innerHTML = users.map(u => `
+            <div class="search-result" onclick="viewArtistProfile('${u.id}')">
+              <div class="search-avatar">${(u.username || '?')[0].toUpperCase()}</div>
+              <div>
+                <div style="font-weight:600;">${u.username}</div>
+                <div style="font-size:12px;color:var(--text2);">${u.bio || ''}</div>
               </div>
-            `).join('');
-          }
-          dropdown.style.display = 'block';
-        });
+            </div>
+          `).join('');
+        }
+
+        dropdown.style.display = 'block';
+      } catch (err) {
+        console.error('Search error:', err);
+        dropdown.innerHTML = `
+          <div style="padding:20px;text-align:center;color:var(--text2);">
+            Ошибка поиска
+          </div>
+        `;
+        dropdown.style.display = 'block';
+      }
     }, 250);
   });
 
-  // клик вне поиска — скрыть
   document.addEventListener('click', e => {
-    if (!e.target.closest('.search-wrapper')) dropdown.style.display = 'none';
+    if (!e.target.closest('.search-wrapper')) {
+      dropdown.style.display = 'none';
+    }
   });
 }
 
@@ -698,9 +724,17 @@ async function renderArtistProfile(artistId) {
         <div class="profile-tracks" id="artist-tracks"></div>
       </div>
     `;
-
+    updateTopbarAuth();
     // Рендер треков
     const container = document.getElementById('artist-tracks');
+    if (!data.songs || data.songs.length === 0) {
+      container.innerHTML = `
+        <div style="color:var(--text2); padding:20px 0;">
+          У артиста пока нет публичных треков
+        </div>
+      `;
+      return;
+    }
     const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
     container.innerHTML = data.songs.map(t => {
@@ -727,8 +761,7 @@ async function renderArtistProfile(artistId) {
   }
 }
 
-window.playTrackFromArtist = function(trackStr) {
-  const track = JSON.parse(trackStr);
+window.playTrackFromArtist = function(track) {
   playTrack(track);
 };
 
