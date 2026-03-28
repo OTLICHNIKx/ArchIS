@@ -18,7 +18,7 @@ function makeGetArtist({ trackRepository }) {
 
     return {
       id: artistId,
-      name: `Artist_${artistId}`, // можно позже заменить на реальное имя из User
+      name: `Artist_${artistId}`,
       bio: "Артист платформы OtlichnikMusic",
       songs: publicTracks.map(track => ({
         id: track._id,
@@ -26,7 +26,12 @@ function makeGetArtist({ trackRepository }) {
         genre: track.genre,
         duration: track.duration,
         repostCount: track.repostCount || 0,
-        isPublic: track.isPublic
+        isPublic: track.isPublic,
+        // === НОВОЕ ===
+        audioUrl: track.audioUrl,
+        coverUrl: track.coverUrl,
+        plays: track.plays || 0,
+        artistName: track.artistName || 'Unknown Artist'
       })),
       totalSongs: publicTracks.length
     };
