@@ -422,27 +422,51 @@ function renderProfilePage() {
 /* ──────────────────────────────────────────────
    ПРОФИЛЬ + ВОЛНЫ + TOAST
    ────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────
+   РЕНДЕР ТРЕКОВ В ПРОФИЛЕ (с обложкой)
+   ────────────────────────────────────────────── */
 async function renderProfileTracks() {
   const container = document.getElementById('profile-tracks');
   if (!container || !currentUser) return;
 
   try {
     const tracks = await apiRequest('/artists/tracks');
+
     const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-    container.innerHTML = tracks.map(t => `
-      <div class="profile-track">
-        <div class="trending-num" style="color:var(--text3);">${PLAY_ICON}</div>
-        <div class="pt-cover trending-cover" style="background: linear-gradient(135deg, #7c3aed, #f97316);"></div>
-        <div class="pt-info">
-          <div class="pt-title">${t.title}</div>
-          <div class="pt-date">${t.artistName || currentUser?.username || 'Неизвестный артист'}</div>
+
+    container.innerHTML = tracks.map(t => {
+      // Если есть обложка — используем её, иначе градиент
+      const coverStyle = t.coverUrl
+        ? `background-image: url('${t.coverUrl}'); background-size: cover; background-position: center;`
+        : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
+
+      return `
+        <div class="profile-track">
+          <div class="pt-cover trending-cover" style="${coverStyle}"></div>
+
+          <div class="pt-info">
+            <div class="pt-title">${t.title}</div>
+            <div class="pt-date">${t.artistName || currentUser.username}</div>
+          </div>
+
+          <div class="pt-wave">
+            ${Array.from({length: 24}, () =>
+              `<div class="ptb" style="height:${4 + Math.random()*22}px"></div>`
+            ).join('')}
+          </div>
+
+          <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
+          <div class="pt-duration">
+            ${t.duration ? Math.floor(t.duration/60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '0:00'}
+          </div>
         </div>
-        <div class="pt-wave">${Array.from({length:24},()=>`<div class="ptb" style="height:${4+Math.random()*22}px"></div>`).join('')}</div>
-        <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
-        <div class="pt-duration">${t.duration ? Math.floor(t.duration/60)+':'+(t.duration%60).toString().padStart(2,'0') : '0:00'}</div>
-      </div>
-    `).join('');
-  } catch (e) { console.log('Нет треков'); }
+      `;
+    }).join('');
+
+  } catch (e) {
+    console.log('Нет треков или ошибка загрузки');
+    container.innerHTML = `<div style="padding:20px;color:var(--text2);text-align:center;">Пока нет треков</div>`;
+  }
 }
 
 function generateWave(id, count = 40) { /* твой оригинальный код */
