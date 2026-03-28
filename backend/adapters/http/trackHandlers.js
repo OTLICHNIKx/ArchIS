@@ -182,9 +182,12 @@ const uploadCover = [
 const searchUsers = async (req, res) => {
   try {
     const { q } = req.query;
-    if (!q || q.length < 2) return res.json([]);
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
 
-    const User = require('../models/User');
+    // Правильный путь к модели из trackHandlers.js
+    const User = require('../../models/User');
 
     const users = await User.find({
       username: { $regex: q, $options: 'i' }
@@ -199,8 +202,10 @@ const searchUsers = async (req, res) => {
       avatar: u.avatar,
       bio: u.bio || 'Артист OtlichnikMusic'
     })));
+
   } catch (error) {
-    handleError(res, error);
+    console.error('Search users error:', error.message);
+    handleError(res, error);   // используем уже существующую функцию обработки ошибок
   }
 };
 
