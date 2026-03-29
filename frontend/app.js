@@ -31,6 +31,7 @@ let audioPlayer = null;
 let currentPlayingTrack = null;
 let currentArtistProfileId = null;
 let isPlaying = false;
+let currentArtistDisplayName = null;
 
 /* ──────────────────────────────────────────────
    ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (главное исправление)
@@ -387,19 +388,24 @@ function updateTopbarAuth() {
 function renderProfileHeader() {
   if (!currentUser) return;
 
-  // Защита от null
   const nameEl = document.getElementById('profile-name');
   const handleEl = document.getElementById('profile-handle');
   const avatarEl = document.getElementById('profile-avatar');
   const avatarTop = document.getElementById('profile-avatar-top');
 
-  if (nameEl) nameEl.textContent = currentUser.username || 'Пользователь';
+  const displayName = currentArtistDisplayName || currentUser.username || 'Пользователь';
+  const username = currentUser.username || 'user';
+
+  if (nameEl) nameEl.textContent = displayName;
   if (handleEl) handleEl.innerHTML = `
-    @${(currentUser.username || 'user').replace(/^@/, '')}
+    @${username.replace(/^@/, '')}
     <span style="color:var(--text3)">· Москва, RU</span>
   `;
-  if (avatarEl) avatarEl.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
-  if (avatarTop) avatarTop.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
+
+  const avatarLetter = (displayName?.[0] || username?.[0] || 'U').toUpperCase();
+
+  if (avatarEl) avatarEl.textContent = avatarLetter;
+  if (avatarTop) avatarTop.textContent = avatarLetter;
 
   const actions = document.getElementById('profile-actions');
   if (actions) {
@@ -503,6 +509,11 @@ async function renderProfileTracks() {
 
   try {
     const items = await apiRequest('/profile/feed');
+    currentArtistDisplayName =
+      items.find(t => t.type !== 'REPOST' && t.artistName && t.artistName.trim())?.artistName
+      || currentUser.username;
+
+    renderProfileHeader();
 
     const statTracks = document.getElementById('stat-tracks');
     if (statTracks) {
@@ -517,8 +528,8 @@ async function renderProfileTracks() {
         : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
 
       const metaLine = t.type === 'REPOST' && t.source
-        ? `Репост · взято у <button class="source-link" onclick="event.stopPropagation(); viewArtistProfile('${t.source.artistId}')">${t.source.artistName}</button>`
-        : `${t.artistName || currentUser.username}`;
+          ? `${t.artistName || 'Unknown artist'} · взято у <button class="source-link" onclick="event.stopPropagation(); viewArtistProfile('${t.source.artistId}')">${t.source.username || t.source.artistName}</button>`
+          : `${t.artistName || currentUser.username}`;
 
       return `
         <div class="profile-track">
