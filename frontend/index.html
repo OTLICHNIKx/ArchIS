@@ -482,5 +482,22 @@
 </div>
 
 <script src="app.js"></script>
+<!-- MINI PLAYER -->
+<div id="mini-player" class="mini-player hidden">
+  <div class="mini-player__info">
+    <div id="mini-track-name" class="mini-player__title">Ничего не играет</div>
+    <div id="mini-artist-name" class="mini-player__artist">OtlichnikMusic</div>
+  </div>
+
+  <div class="mini-player__controls">
+    <button id="mini-play-pause" class="mini-player__btn" onclick="toggleCurrentTrack()" title="Play / Pause">
+      ▶
+    </button>
+    <button id="mini-stop" class="mini-player__btn" onclick="stopTrack()" title="Stop">
+      ■
+    </button>
+  </div>
+</div>
+
 </body>
 </html>

@@ -650,6 +650,16 @@ function toggleTrack(track) {
   playTrack(track);
 }
 
+function toggleCurrentTrack() {
+  if (!currentPlayingTrack) return;
+
+  if (isPlaying) {
+    pauseTrack();
+  } else {
+    playTrack(currentPlayingTrack);
+  }
+}
+
 function playTrack(track) {
   if (!track?.audioUrl) {
     return showToast('Трек ещё не обработан', 'error');
@@ -672,16 +682,23 @@ function playTrack(track) {
 }
 
 function updateMiniPlayer(track = currentPlayingTrack) {
+  const playerEl = document.getElementById('mini-player');
   const nameEl = document.getElementById('mini-track-name');
   const artistEl = document.getElementById('mini-artist-name');
-  if (!nameEl || !artistEl) return;
+  const playPauseBtn = document.getElementById('mini-play-pause');
+
+  if (!playerEl || !nameEl || !artistEl || !playPauseBtn) return;
 
   if (track) {
-    nameEl.textContent = track.title;
+    playerEl.classList.remove('hidden');
+    nameEl.textContent = track.title || 'Без названия';
     artistEl.textContent = track.artistName || 'Unknown';
+    playPauseBtn.textContent = isPlaying ? '❚❚' : '▶';
   } else {
+    playerEl.classList.add('hidden');
     nameEl.textContent = 'Ничего не играет';
     artistEl.textContent = 'OtlichnikMusic';
+    playPauseBtn.textContent = '▶';
   }
 }
 
@@ -854,6 +871,7 @@ window.closeModal = closeModal;
 window.showPage = showPage;
 window.logout = logout;
 window.toggleTrack = toggleTrack;
+window.toggleCurrentTrack = toggleCurrentTrack;
 window.stopTrack = stopTrack;
 
 window.openAuthWithReset = () => {
