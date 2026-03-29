@@ -29,7 +29,8 @@ let selectedFile = null;
 let selectedCover = null;
 let audioPlayer = null;
 let currentPlayingTrack = null;
-let currentArtistProfileId = null;   // для публичного профиля
+let currentArtistProfileId = null;
+let isPlaying = false;
 
 /* ──────────────────────────────────────────────
    ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (главное исправление)
@@ -513,7 +514,19 @@ async function renderProfileTracks() {
 
       return `
         <div class="profile-track">
-          <div class="pt-cover trending-cover" style="${coverStyle}"></div>
+          <div
+              class="pt-cover trending-cover track-cover-interactive"
+              style="${coverStyle}"
+              onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
+            >
+              <div
+                class="track-overlay"
+                data-track-play="1"
+                data-track-json='${JSON.stringify(t).replace(/'/g, "&apos;")}'
+              >
+                ${getTrackButtonIcon(t)}
+              </div>
+            </div>
 
           <div class="pt-info">
             <div class="pt-title">${t.title}</div>
@@ -533,6 +546,7 @@ async function renderProfileTracks() {
         </div>
       `;
     }).join('');
+    refreshTrackPlayStates();
 
   } catch (e) {
     console.log('Нет треков или ошибка загрузки');
@@ -581,25 +595,80 @@ function initAudioPlayer() {
   audioPlayer.style.display = 'none';
   document.body.appendChild(audioPlayer);
 
+  audioPlayer.addEventListener('play', () => {
+    isPlaying = true;
+    updateMiniPlayer();
+    refreshTrackPlayStates();
+  });
+
+  audioPlayer.addEventListener('pause', () => {
+    isPlaying = false;
+    updateMiniPlayer();
+    refreshTrackPlayStates();
+  });
+
   audioPlayer.addEventListener('ended', () => {
+    isPlaying = false;
     currentPlayingTrack = null;
     updateMiniPlayer();
+    refreshTrackPlayStates();
   });
+}
+
+function isSameTrack(a, b) {
+  if (!a || !b) return false;
+  return String(a.id || a._id) === String(b.id || b._id);
+}
+
+function pauseTrack() {
+  if (!audioPlayer) return;
+  audioPlayer.pause();
+}
+
+function stopTrack() {
+  if (!audioPlayer) return;
+
+  audioPlayer.pause();
+  audioPlayer.currentTime = 0;
+  currentPlayingTrack = null;
+  isPlaying = false;
+
+  updateMiniPlayer();
+  refreshTrackPlayStates();
+}
+
+function toggleTrack(track) {
+  if (!track) return;
+
+  const sameTrack = isSameTrack(track, currentPlayingTrack);
+
+  if (sameTrack && isPlaying) {
+    pauseTrack();
+    return;
+  }
+
+  playTrack(track);
 }
 
 function playTrack(track) {
   if (!track?.audioUrl) {
     return showToast('Трек ещё не обработан', 'error');
   }
-  const fullUrl = `http://localhost:5000${track.audioUrl}`;
 
-  if (!audioPlayer || audioPlayer.src !== fullUrl) {
-    audioPlayer.src = fullUrl;
-  }
-  audioPlayer.play().catch(() => showToast('Не удалось воспроизвести', 'error'));
+  const fullUrl = `http://localhost:5000${track.audioUrl}`;
+  const sameTrack = isSameTrack(track, currentPlayingTrack);
 
   currentPlayingTrack = track;
-  updateMiniPlayer(track);
+
+  if (!audioPlayer) return;
+
+  if (!sameTrack || audioPlayer.src !== fullUrl) {
+    audioPlayer.src = fullUrl;
+  }
+
+  audioPlayer.play().catch(() => {
+    showToast('Не удалось воспроизвести', 'error');
+  });
 }
 
 function updateMiniPlayer(track = currentPlayingTrack) {
@@ -611,8 +680,8 @@ function updateMiniPlayer(track = currentPlayingTrack) {
     nameEl.textContent = track.title;
     artistEl.textContent = track.artistName || 'Unknown';
   } else {
-    nameEl.textContent = 'OTLICHNIK — Тождество Эйлера';
-    artistEl.textContent = 'OTLICHNIK';
+    nameEl.textContent = 'Ничего не играет';
+    artistEl.textContent = 'OtlichnikMusic';
   }
 }
 
@@ -749,7 +818,19 @@ async function renderArtistProfile(artistId) {
 
       return `
         <div class="profile-track">
-          <div class="pt-cover trending-cover" style="${coverStyle}" onclick="playTrackFromArtist(${JSON.stringify(t).replace(/"/g,'&quot;')})"></div>
+          <div
+              class="pt-cover trending-cover track-cover-interactive"
+              style="${coverStyle}"
+              onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
+            >
+              <div
+                class="track-overlay"
+                data-track-play="1"
+                data-track-json='${JSON.stringify(t).replace(/'/g, "&apos;")}'
+              >
+                ${getTrackButtonIcon(t)}
+              </div>
+            </div>
           <div class="pt-info">
             <div class="pt-title">${t.title}</div>
             <div class="pt-date">${t.artistName}</div>
@@ -759,6 +840,7 @@ async function renderArtistProfile(artistId) {
         </div>
       `;
     }).join('');
+    refreshTrackPlayStates();
 
   } catch (e) {
     console.error(e);
@@ -766,15 +848,14 @@ async function renderArtistProfile(artistId) {
   }
 }
 
-window.playTrackFromArtist = function(track) {
-  playTrack(track);
-};
-
 /* Глобальные функции для onclick в HTML */
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.showPage = showPage;
 window.logout = logout;
+window.toggleTrack = toggleTrack;
+window.stopTrack = stopTrack;
+
 window.openAuthWithReset = () => {
   document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   showModal('auth-modal');
@@ -837,5 +918,41 @@ function initCoverUpload() {
     e.preventDefault();
     area.style.borderColor = 'var(--border)';
     if (e.dataTransfer.files.length) handleCoverFile(e.dataTransfer.files[0]);
+  });
+}
+
+function getTrackButtonIcon(track) {
+  const isCurrent = isSameTrack(track, currentPlayingTrack);
+
+  if (isCurrent && isPlaying) {
+    return `
+      <div class="track-overlay-icon pause">
+        <span></span><span></span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="track-overlay-icon play"></div>
+  `;
+}
+
+function refreshTrackPlayStates() {
+  document.querySelectorAll('[data-track-play]').forEach(el => {
+    const raw = el.getAttribute('data-track-json');
+    if (!raw) return;
+
+    try {
+      const track = JSON.parse(raw);
+      el.innerHTML = getTrackButtonIcon(track);
+
+      if (isSameTrack(track, currentPlayingTrack)) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    } catch (e) {
+      console.warn('Не удалось обновить состояние трека', e);
+    }
   });
 }
