@@ -4,6 +4,7 @@
 const container = require('../../infrastructure/container');
 const uploadMiddleware = require('../../middleware/upload');
 const { protect } = require('../../middleware/auth');
+const User = require('../../models/User');
 
 /* ====================== ПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================== */
 const handleError = (res, error) => {
@@ -178,6 +179,39 @@ const uploadCover = [
   }
 ];
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
+const searchUsers = async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+
+    if (q.length < 2) {
+      return res.json([]);
+    }
+
+    const safeQ = escapeRegex(q);
+
+    const users = await User.find({
+      username: { $regex: safeQ, $options: 'i' }
+    })
+      .select('_id username avatar bio')
+      .limit(10)
+      .lean();
+
+    res.json(users.map(u => ({
+      id: u._id,
+      username: u.username,
+      avatar: u.avatar,
+      bio: u.bio || 'Артист OtlichnikMusic'
+    })));
+  } catch (error) {
+    console.error('Search users error:', error.message);
+    handleError(res, error);
+  }
+};
+
+
 module.exports = {
   createTrack,
   uploadAudio,
@@ -191,4 +225,5 @@ module.exports = {
   getArtist,
   RepostTrack,
   uploadCover,
+  searchUsers,
 };

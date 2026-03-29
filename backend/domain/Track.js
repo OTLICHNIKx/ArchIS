@@ -40,11 +40,11 @@ function validateTrackMetadata({ title, genre, tags, description, duration }) {
   if (description && description.length > 1000) {
     errors.push('Описание не может быть длиннее 1000 символов');
   }
-  if (duration === undefined || duration === null) {
-    errors.push('Длительность обязательна');
-  }
-  if (duration !== undefined && duration <= 0) {
-    errors.push('Длительность должна быть больше 0');
+
+  // Длительность больше НЕ обязательна при создании метаданных
+  // (будет заполнена позже при загрузке аудио или оставлена 0)
+  if (duration !== undefined && duration !== null && duration < 0) {
+     errors.push('Длительность не может быть отрицательной');
   }
 
   return errors;

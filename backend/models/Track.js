@@ -11,7 +11,7 @@ const trackSchema = new mongoose.Schema({
   genre:        { type: String, required: true },
   tags:         { type: [String], default: [] },
   description:  { type: String, default: '' },
-  duration:     { type: Number, required: true },
+  duration:     { type: Number, default: 0 },
   isPublic:     { type: Boolean, default: true },
   plays:        { type: Number, default: 0 },
   status: {
