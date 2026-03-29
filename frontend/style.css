@@ -768,9 +768,10 @@ body {
   background: #fff;
 }
 
-/* ====================== MINI PLAYER ====================== */
+/* ====================== GLOBAL MINI PLAYER ====================== */
 
-.mini-player {
+/* Нижний глобальный плеер */
+#mini-player {
   position: fixed;
   left: 50%;
   bottom: 20px;
@@ -786,19 +787,19 @@ body {
   border: 1px solid var(--border);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(10px);
-  z-index: 200;
+  z-index: 190;
 }
 
-.mini-player.hidden {
+#mini-player.hidden {
   display: none;
 }
 
-.mini-player__info {
+#mini-player .mini-player__info {
   min-width: 0;
   flex: 1;
 }
 
-.mini-player__title {
+#mini-player .mini-player__title {
   font-size: 14px;
   font-weight: 700;
   color: var(--text);
@@ -807,7 +808,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.mini-player__artist {
+#mini-player .mini-player__artist {
   margin-top: 4px;
   font-size: 12px;
   color: var(--text2);
@@ -816,13 +817,13 @@ body {
   text-overflow: ellipsis;
 }
 
-.mini-player__controls {
+#mini-player .mini-player__controls {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.mini-player__btn {
+#mini-player .mini-player__btn {
   width: 42px;
   height: 42px;
   border: 1px solid var(--border);
@@ -835,15 +836,27 @@ body {
   transition: 0.18s ease;
 }
 
-.mini-player__btn:hover {
+#mini-player .mini-player__btn:hover {
   transform: translateY(-1px);
   border-color: var(--accent);
 }
 
-#mini-play-pause {
+#mini-player #mini-play-pause {
   font-size: 16px;
 }
 
-#mini-stop {
+#mini-player #mini-stop {
   font-size: 15px;
+}
+
+/* Когда плеер виден — поднимаем нижние кнопки */
+body.player-visible .demo-nav {
+  bottom: 96px;
+  transition: bottom 0.2s ease;
+}
+
+/* Даём запас снизу, чтобы контент не уезжал под плеер */
+body.player-visible .content,
+body.player-visible .profile-layout {
+  padding-bottom: 110px;
 }

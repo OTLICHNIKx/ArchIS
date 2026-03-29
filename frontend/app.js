@@ -691,11 +691,15 @@ function updateMiniPlayer(track = currentPlayingTrack) {
 
   if (track) {
     playerEl.classList.remove('hidden');
+    document.body.classList.add('player-visible');
+
     nameEl.textContent = track.title || 'Без названия';
     artistEl.textContent = track.artistName || 'Unknown';
     playPauseBtn.textContent = isPlaying ? '❚❚' : '▶';
   } else {
     playerEl.classList.add('hidden');
+    document.body.classList.remove('player-visible');
+
     nameEl.textContent = 'Ничего не играет';
     artistEl.textContent = 'OtlichnikMusic';
     playPauseBtn.textContent = '▶';
