@@ -15,7 +15,8 @@ const {
   getPopularTags,
   getArtist,
   RepostTrack,
-  searchUsers
+  searchUsers,
+  getProfileFeed
 } = require('../adapters/http/trackHandlers');
 
 const { protect } = require('../middleware/auth');
@@ -34,6 +35,7 @@ router.get('/tags/popular', getPopularTags);                             // 9. �
 router.get('/search/users', searchUsers);                                // ←←← новый публичный маршрут
 router.get('/artists/:artistId', getArtist);                             // 10.Получить карточку артиста (публичный эндпоинт)
 router.post('/tracks/:trackId/repost', protect, RepostTrack);            // 11.Репост трека (требует авторизации)
+router.get('/profile/feed', protect, getProfileFeed);
 
 
 module.exports = router;

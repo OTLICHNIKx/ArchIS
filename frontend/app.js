@@ -502,55 +502,64 @@ async function renderProfileTracks() {
   if (!container || !currentUser) return;
 
   try {
-    const tracks = await apiRequest('/artists/tracks');
+    const items = await apiRequest('/profile/feed');
+
+    const statTracks = document.getElementById('stat-tracks');
+    if (statTracks) {
+      statTracks.textContent = items.length;
+    }
 
     const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
-    container.innerHTML = tracks.map(t => {
-     // Если есть обложка — используем её, иначе градиент
-    const coverStyle = t.coverUrl
-      ? `background-image: url('http://localhost:5000${t.coverUrl}'); background-size: cover; background-position: center;`
-      : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
+    container.innerHTML = items.map(t => {
+      const coverStyle = t.coverUrl
+        ? `background-image: url('http://localhost:5000${t.coverUrl}'); background-size: cover; background-position: center;`
+        : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
+
+      const metaLine = t.type === 'REPOST' && t.source
+        ? `Репост · взято у <button class="source-link" onclick="event.stopPropagation(); viewArtistProfile('${t.source.artistId}')">${t.source.artistName}</button>`
+        : `${t.artistName || currentUser.username}`;
 
       return `
         <div class="profile-track">
           <div
-              class="pt-cover trending-cover track-cover-interactive"
-              style="${coverStyle}"
-              onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
+            class="pt-cover trending-cover track-cover-interactive"
+            style="${coverStyle}"
+            onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
+          >
+            <div
+              class="track-overlay"
+              data-track-play="1"
+              data-track-json='${JSON.stringify(t).replace(/'/g, "&apos;")}'
             >
-              <div
-                class="track-overlay"
-                data-track-play="1"
-                data-track-json='${JSON.stringify(t).replace(/'/g, "&apos;")}'
-              >
-                ${getTrackButtonIcon(t)}
-              </div>
+              ${getTrackButtonIcon(t)}
             </div>
+          </div>
 
           <div class="pt-info">
             <div class="pt-title">${t.title}</div>
-            <div class="pt-date">${t.artistName || currentUser.username}</div>
+            <div class="pt-date">${metaLine}</div>
           </div>
 
           <div class="pt-wave">
-            ${Array.from({length: 24}, () =>
-              `<div class="ptb" style="height:${4 + Math.random()*22}px"></div>`
+            ${Array.from({ length: 24 }, () =>
+              `<div class="ptb" style="height:${4 + Math.random() * 22}px"></div>`
             ).join('')}
           </div>
 
-          <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
+          <div class="pt-plays">${PLAY_ICON} ${t.plays || 0}</div>
           <div class="pt-duration">
-            ${t.duration ? Math.floor(t.duration/60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '0:00'}
+            ${t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '0:00'}
           </div>
         </div>
       `;
     }).join('');
+
     refreshTrackPlayStates();
 
   } catch (e) {
-    console.log('Нет треков или ошибка загрузки');
-    container.innerHTML = `<div style="padding:20px;color:var(--text2);text-align:center;">Пока нет треков</div>`;
+    console.error('Ошибка загрузки profile feed:', e);
+    container.innerHTML = `<div style="padding:20px;color:var(--text2);text-align:center;">Пока нет треков и репостов</div>`;
   }
 }
 
@@ -838,8 +847,8 @@ async function renderArtistProfile(artistId) {
         : `background:linear-gradient(135deg,#7c3aed,#f97316);`;
 
       return `
-        <div class="profile-track">
-          <div
+          <div class="profile-track">
+            <div
               class="pt-cover trending-cover track-cover-interactive"
               style="${coverStyle}"
               onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
@@ -852,20 +861,46 @@ async function renderArtistProfile(artistId) {
                 ${getTrackButtonIcon(t)}
               </div>
             </div>
-          <div class="pt-info">
-            <div class="pt-title">${t.title}</div>
-            <div class="pt-date">${t.artistName}</div>
+
+            <div class="pt-info">
+              <div class="pt-title">${t.title}</div>
+              <div class="pt-date">${t.artistName}</div>
+            </div>
+
+            ${
+              currentUser && String(currentUser._id) !== String(artistId)
+                ? `<button class="btn btn-ghost track-repost-btn" onclick="event.stopPropagation(); repostTrack('${t.id}')">Репост</button>`
+                : ``
+            }
+
+            <div class="pt-plays">${PLAY_ICON} ${t.plays || 0}</div>
+            <div class="pt-duration">${Math.floor(t.duration/60)}:${(t.duration%60).toString().padStart(2,'0')}</div>
           </div>
-          <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
-          <div class="pt-duration">${Math.floor(t.duration/60)}:${(t.duration%60).toString().padStart(2,'0')}</div>
-        </div>
-      `;
+        `;
     }).join('');
     refreshTrackPlayStates();
 
   } catch (e) {
     console.error(e);
     content.innerHTML = `<div style="padding:40px;color:var(--text2);text-align:center;">Артист не найден</div>`;
+  }
+}
+
+async function repostTrack(trackId) {
+  if (!currentUser) {
+    return showToast('Сначала войди в аккаунт!', 'error');
+  }
+
+  try {
+    await apiRequest(`/tracks/${trackId}/repost`, 'POST');
+    showToast('Трек добавлен в ваш профиль', 'success');
+
+    if (document.getElementById('page-profile')?.classList.contains('active')) {
+      await renderProfileTracks();
+    }
+  } catch (err) {
+    console.error('Repost error:', err);
+    showToast(err.message || 'Не удалось репостнуть трек', 'error');
   }
 }
 
@@ -877,6 +912,7 @@ window.logout = logout;
 window.toggleTrack = toggleTrack;
 window.toggleCurrentTrack = toggleCurrentTrack;
 window.stopTrack = stopTrack;
+window.repostTrack = repostTrack;
 
 window.openAuthWithReset = () => {
   document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));

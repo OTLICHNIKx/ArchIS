@@ -1,13 +1,27 @@
-// backend/usecases/RepostTrack.js
 'use strict';
 
 const { validateRepost } = require('../domain/Repost');
+const { TrackStatus } = require('../domain/Track');
+
+function extractArtistId(track) {
+  if (!track) return null;
+  if (track.artistId && typeof track.artistId === 'object' && track.artistId._id) {
+    return String(track.artistId._id);
+  }
+  return track.artistId ? String(track.artistId) : null;
+}
+
+function extractArtistName(track) {
+  if (!track) return 'Unknown artist';
+  if (track.artistName) return track.artistName;
+  if (track.artistId && typeof track.artistId === 'object' && track.artistId.username) {
+    return track.artistId.username;
+  }
+  return 'Unknown artist';
+}
 
 function makeRepostTrack({ trackRepository, repostRepository, notificationService }) {
-
-  return async function RepostTrack(songId, userId) {
-
-    // 1. Проверяем, существует ли трек
+  return async function repostTrack(songId, userId) {
     const track = await trackRepository.findById(songId);
     if (!track) {
       const err = new Error('Трек не найден');
@@ -15,14 +29,21 @@ function makeRepostTrack({ trackRepository, repostRepository, notificationServic
       throw err;
     }
 
-    // 2. Проверяем, что трек публичный (по требованиям Практики 1)
-    if (track.isPublic === false) {
-      const err = new Error('Песня приватная, репост невозможен');
+    if (track.status !== TrackStatus.PUBLISHED || track.isPublic === false) {
+      const err = new Error('Репост возможен только для публичного опубликованного трека');
       err.status = 403;
       throw err;
     }
 
-    // 3. Проверяем дубликат репоста
+    const originalArtistId = extractArtistId(track);
+    const originalArtistName = extractArtistName(track);
+
+    if (String(originalArtistId) === String(userId)) {
+      const err = new Error('Нельзя репостнуть собственный трек');
+      err.status = 400;
+      throw err;
+    }
+
     const existingRepost = await repostRepository.findByUserAndSong(userId, songId);
     if (existingRepost) {
       const err = new Error('Вы уже репостнули этот трек');
@@ -30,7 +51,6 @@ function makeRepostTrack({ trackRepository, repostRepository, notificationServic
       throw err;
     }
 
-    // 4. Валидация через domain
     const errors = validateRepost({ songId, userId });
     if (errors.length > 0) {
       const err = new Error(errors.join(', '));
@@ -38,30 +58,37 @@ function makeRepostTrack({ trackRepository, repostRepository, notificationServic
       throw err;
     }
 
-    // 5. Создаём репост
     const repost = await repostRepository.create({
       songId,
       userId,
-      timestamp: new Date()
+      originalArtistId,
+      originalArtistName,
+      timestamp: new Date(),
     });
 
-    // 6. Увеличиваем счётчик репостов у трека
     const newRepostCount = (track.repostCount || 0) + 1;
     await trackRepository.update(songId, { repostCount: newRepostCount });
 
-    // 7. Отправляем уведомления подписчикам (заглушка)
     if (notificationService) {
       await notificationService.sendRepostNotification(userId, track).catch(console.error);
     }
 
-    console.log(`[Repost] Пользователь ${userId} репостнул трек ${songId}`);
-
     return {
       id: repost._id || repost.id,
-      songId: repost.songId,
-      userId: repost.userId,
-      timestamp: repost.timestamp,
-      repostCount: newRepostCount
+      type: 'REPOST',
+      originalTrackId: String(track._id || songId),
+      title: track.title,
+      audioUrl: track.audioUrl,
+      coverUrl: track.coverUrl,
+      duration: track.duration || 0,
+      plays: track.plays || 0,
+      repostCount: newRepostCount,
+      artistName: originalArtistName,
+      source: {
+        artistId: String(originalArtistId),
+        artistName: originalArtistName,
+      },
+      createdAt: repost.createdAt || repost.timestamp || new Date().toISOString(),
     };
   };
 }

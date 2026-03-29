@@ -211,6 +211,16 @@ const searchUsers = async (req, res) => {
   }
 };
 
+const getProfileFeed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const result = await container.getProfileFeed(userId);
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
 
 module.exports = {
   createTrack,
@@ -226,4 +236,5 @@ module.exports = {
   RepostTrack,
   uploadCover,
   searchUsers,
+  getProfileFeed,
 };
