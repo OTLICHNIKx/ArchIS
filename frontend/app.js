@@ -128,10 +128,11 @@ async function handleRegister(e) {
 
     clearAuthForms();
     closeModal('auth-modal');
+    updateTopbarAuth();
     showToast(`Добро пожаловать, ${data.username}! 🎉`, 'success');
-
     renderProfileHeader();
     renderProfileTracks();
+
     // Если сейчас открыт профиль — обновляем его содержимое
     if (document.getElementById('page-profile').classList.contains('active')) {
       renderProfilePage();
@@ -154,9 +155,11 @@ async function handleLogin(e) {
 
     clearAuthForms();
     closeModal('auth-modal');
+    updateTopbarAuth();
     showToast(`С возвращением, ${data.username}! 👋`, 'success')
     renderProfileHeader();
     renderProfileTracks();
+
     // Если сейчас открыт профиль — обновляем его содержимое
     if (document.getElementById('page-profile').classList.contains('active')) {
       renderProfilePage();
@@ -171,6 +174,8 @@ function logout() {
   localStorage.removeItem('token');
   currentUser = null;
   updateTopbarAuth();
+
+  showPage('home');
   if (document.getElementById('page-profile').classList.contains('active')) {
       renderProfilePage();
     }
