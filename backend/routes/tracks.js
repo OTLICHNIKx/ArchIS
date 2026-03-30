@@ -21,30 +21,6 @@ const {
 
 const { protect } = require('../middleware/auth');
 
-// === ЭНДПОИНТЫ ===
-// backend/routes/tracks.js
-const express = require('express');
-const router = express.Router();
-
-const {
-  createTrack,
-  uploadAudio,
-  uploadCover,
-  publishTrack,
-  archiveTrack,
-  deleteTrack,
-  getArtistTracks,
-  getTrack,
-  updateTrackMetadata,
-  getPopularTags,
-  getArtist,
-  RepostTrack,
-  searchUsers,
-  getProfileFeed
-} = require('../adapters/http/trackHandlers');
-
-const { protect } = require('../middleware/auth');
-
 // === canonical REST routes for the report ===
 router.post('/artists/:artistId/tracks', protect, createTrack);
 router.get('/artists/:artistId/tracks', protect, getArtistTracks);
@@ -61,7 +37,6 @@ router.post('/artists/:artistId/tracks/:trackId/archive', protect, archiveTrack)
 router.get('/tags/popular', getPopularTags);
 router.get('/artists/:artistId', getArtist);
 
-// extra features, not used in report
 router.get('/search/users', searchUsers);
 router.post('/tracks/:trackId/repost', protect, RepostTrack);
 router.get('/profile/feed', protect, getProfileFeed);
