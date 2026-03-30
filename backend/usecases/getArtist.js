@@ -1,8 +1,7 @@
+// backend/usecases/getArtist.js
 'use strict';
 
-const User = require('../models/User');
-
-function makeGetArtist({ trackRepository }) {
+function makeGetArtist({ trackRepository, userRepository }) {
   return async function getArtist(artistId) {
     if (!artistId) {
       const err = new Error('artistId обязателен');
@@ -10,9 +9,7 @@ function makeGetArtist({ trackRepository }) {
       throw err;
     }
 
-    const artistUser = await User.findById(artistId)
-      .select('username avatar bio')
-      .lean();
+    const artistUser = await userRepository.findArtistCardById(artistId);
 
     if (!artistUser) {
       const err = new Error('Артист не найден');
@@ -26,16 +23,12 @@ function makeGetArtist({ trackRepository }) {
       track.isPublic !== false && track.status === 'PUBLISHED'
     );
 
-    const displayArtistName =
-      publicTracks.find(track => track.artistName && track.artistName.trim())?.artistName
-      || artistUser.username;
-
     return {
       id: String(artistId),
-      username: artistUser.username,     // хэндл профиля
-      name: artistUser.username,           // сценическое имя
+      username: artistUser.username,
+      name: artistUser.username,
       avatar: artistUser.avatar,
-      bio: artistUser.bio || "Артист платформы OtlichnikMusic",
+      bio: artistUser.bio || 'Артист платформы OtlichnikMusic',
 
       songs: publicTracks.map(track => ({
         id: String(track._id),
@@ -47,9 +40,10 @@ function makeGetArtist({ trackRepository }) {
         audioUrl: track.audioUrl,
         coverUrl: track.coverUrl,
         plays: track.plays || 0,
-        artistName: track.artistName || artistUser.username, // сценическое имя в карточке трека
-        artistUsername: artistUser.username                  // username, если нужен отдельно
+        artistName: track.artistName || artistUser.username,
+        artistUsername: artistUser.username
       })),
+
       totalSongs: publicTracks.length
     };
   };

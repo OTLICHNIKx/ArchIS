@@ -12,8 +12,19 @@ const resolvers = {
       if (!context.user) {
         throw new Error('Unauthorized');
       }
+
       const userId = context.user._id;
-      return container.RepostTrack(songId, userId);
+      const dto = await container.RepostTrack(songId, userId);
+
+      return {
+        id: dto.id,
+        song: dto.song,
+        user: {
+          id: String(context.user._id),
+          username: context.user.username,
+        },
+        timestamp: dto.timestamp,
+      };
     },
   },
 };

@@ -1,25 +1,47 @@
-// adapters/http/trackHandlers.js
-// HTTP-адаптеры — единственное место, где Express встречается с Use Cases
-
+// backend/adapters/http/trackHandlers.js
 const container = require('../../infrastructure/container');
 const uploadMiddleware = require('../../middleware/upload');
 const { protect } = require('../../middleware/auth');
-const User = require('../../models/User');
 
-/* ====================== ПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================== */
 const handleError = (res, error) => {
   const status = error.status || 500;
   const message = error.message || 'Ошибка сервера';
   res.status(status).json({ error: message });
 };
 
-/* ====================== ХЕНДЛЕРЫ ====================== */
+const idsEqual = (a, b) => String(a) === String(b);
 
-// 1. Создать трек (метаданные) — POST /api/artists/:artistId/tracks
+const toRestRepostResponse = (dto, currentUser) => ({
+  id: dto.id,
+  type: 'REPOST',
+  originalTrackId: dto.song.id,
+  title: dto.song.title,
+  audioUrl: dto.meta.audioUrl,
+  coverUrl: dto.meta.coverUrl,
+  duration: dto.meta.duration,
+  plays: dto.meta.plays,
+  repostCount: dto.song.repostCount,
+  artistName: dto.meta.originalArtistName,
+  source: {
+    artistId: dto.meta.originalArtistId,
+    artistName: dto.meta.originalArtistName,
+  },
+  createdAt: dto.timestamp,
+  reposter: {
+    id: String(currentUser._id),
+    username: currentUser.username,
+  }
+});
+
 const createTrack = async (req, res) => {
   try {
-    const artistId = req.user._id;           // из protect
+    const { artistId } = req.params;
+    const currentUserId = req.user._id;
     const data = req.body;
+
+    if (!idsEqual(artistId, currentUserId)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     const result = await container.createTrack(artistId, data);
     res.status(201).json(result);
@@ -28,10 +50,9 @@ const createTrack = async (req, res) => {
   }
 };
 
-// 2. Загрузить аудиофайл — POST /api/artists/:trackId/audio
 const uploadAudio = [
   protect,
-  uploadMiddleware.single('audio'),   // поле в форме должно называться "audio"
+  uploadMiddleware.single('audio'),
   async (req, res) => {
     try {
       const artistId = req.user._id;
@@ -47,7 +68,6 @@ const uploadAudio = [
   }
 ];
 
-// 3. Опубликовать трек — POST /api/artists/:trackId/publish
 const publishTrack = async (req, res) => {
   try {
     const artistId = req.user._id;
@@ -60,7 +80,6 @@ const publishTrack = async (req, res) => {
   }
 };
 
-// 4. Архивировать (скрыть) трек — POST /api/artists/:trackId/archive
 const archiveTrack = async (req, res) => {
   try {
     const artistId = req.user._id;
@@ -73,7 +92,6 @@ const archiveTrack = async (req, res) => {
   }
 };
 
-// 5. Удалить трек — DELETE /api/artists/tracks/:trackId
 const deleteTrack = async (req, res) => {
   try {
     const artistId = req.user._id;
@@ -86,7 +104,6 @@ const deleteTrack = async (req, res) => {
   }
 };
 
-// 6. Получить все треки артиста — GET /api/artists/tracks
 const getArtistTracks = async (req, res) => {
   try {
     const artistId = req.user._id;
@@ -97,7 +114,6 @@ const getArtistTracks = async (req, res) => {
   }
 };
 
-// 7. Получить один трек — GET /api/artists/tracks/:trackId
 const getTrack = async (req, res) => {
   try {
     const artistId = req.user._id;
@@ -110,7 +126,6 @@ const getTrack = async (req, res) => {
   }
 };
 
-// 8. Обновить метаданные — PATCH /api/artists/tracks/:trackId
 const updateTrackMetadata = async (req, res) => {
   try {
     const artistId = req.user._id;
@@ -124,7 +139,6 @@ const updateTrackMetadata = async (req, res) => {
   }
 };
 
-// 9. Популярные теги (публичный) — GET /api/tags/popular
 const getPopularTags = async (req, res) => {
   try {
     const tags = await container.getPopularTags(20);
@@ -134,9 +148,6 @@ const getPopularTags = async (req, res) => {
   }
 };
 
-// ==================== НОВЫЕ ХЕНДЛЕРЫ ДЛЯ ВОРКФЛОУ ИЗ ПРАКТИКИ 1 ====================
-
-// Получить карточку артиста + его публичные треки
 const getArtist = async (req, res) => {
   try {
     const { artistId } = req.params;
@@ -147,23 +158,21 @@ const getArtist = async (req, res) => {
   }
 };
 
-// Репост трека в свой профиль
 const RepostTrack = async (req, res) => {
   try {
-    const userId = req.user._id;           // берётся из middleware protect
-    const { trackId } = req.params;        // songId = trackId
+    const userId = req.user._id;
+    const { trackId } = req.params;
 
-    const result = await container.RepostTrack(trackId, userId);
-    res.status(201).json(result);
+    const dto = await container.RepostTrack(trackId, userId);
+    res.status(201).json(toRestRepostResponse(dto, req.user));
   } catch (error) {
     handleError(res, error);
   }
 };
 
-// 10. Загрузить обложку — POST /api/artists/:trackId/cover
 const uploadCover = [
   protect,
-  uploadMiddleware.single('cover'),   // поле в форме должно называться "cover"
+  uploadMiddleware.single('cover'),
   async (req, res) => {
     try {
       const artistId = req.user._id;
@@ -179,34 +188,12 @@ const uploadCover = [
   }
 ];
 
-const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-// ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
 const searchUsers = async (req, res) => {
   try {
-    const q = String(req.query.q || '').trim();
-
-    if (q.length < 2) {
-      return res.json([]);
-    }
-
-    const safeQ = escapeRegex(q);
-
-    const users = await User.find({
-      username: { $regex: safeQ, $options: 'i' }
-    })
-      .select('_id username avatar bio')
-      .limit(10)
-      .lean();
-
-    res.json(users.map(u => ({
-      id: u._id,
-      username: u.username,
-      avatar: u.avatar,
-      bio: u.bio || 'Артист OtlichnikMusic'
-    })));
+    const q = req.query.q;
+    const result = await container.searchUsers(q);
+    res.json(result);
   } catch (error) {
-    console.error('Search users error:', error.message);
     handleError(res, error);
   }
 };
@@ -220,7 +207,6 @@ const getProfileFeed = async (req, res) => {
     handleError(res, error);
   }
 };
-
 
 module.exports = {
   createTrack,
