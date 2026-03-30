@@ -23,15 +23,19 @@ class MongoRepostRepository extends IRepostRepository {
     }).lean();
   }
 
-  async findAllByUser(userId) {
-    return await RepostModel.find({ userId })
-      .sort({ createdAt: -1 })
-      .populate({
-        path: 'songId',
-        select: 'title artistId artistName audioUrl coverUrl duration plays repostCount status isPublic'
-      })
-      .lean();
-  }
+   async findAllByUser(userId) {
+     return await RepostModel.find({ userId })
+       .sort({ createdAt: -1 })
+       .populate({
+         path: 'songId',
+         select: 'title artistId artistName audioUrl coverUrl duration plays repostCount status isPublic'
+       })
+       .populate({
+         path: 'originalArtistId',
+         select: 'username'
+       })
+       .lean();
+   }
 }
 
 module.exports = MongoRepostRepository;

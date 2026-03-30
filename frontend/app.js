@@ -253,6 +253,50 @@ function handleFile(file) {
   }
 }
 
+function resetUploadForm() {
+  selectedFile = null;
+  selectedCover = null;
+  window.selectedTrackDuration = 0;
+
+  document.getElementById('track-title').value = '';
+  document.getElementById('artist-name').value = '';
+  document.getElementById('track-genre').value = '';
+  document.getElementById('track-tags').value = '';
+  document.getElementById('track-desc').value = '';
+
+  const durationEl = document.getElementById('track-duration');
+  if (durationEl) durationEl.value = '';
+
+  document.getElementById('public-toggle')?.classList.remove('off');
+
+  const audioFileInput = document.getElementById('audio-file');
+  if (audioFileInput) audioFileInput.value = '';
+
+  const coverFileInput = document.getElementById('cover-file');
+  if (coverFileInput) coverFileInput.value = '';
+
+  const dropZone = document.getElementById('drop-zone');
+  if (dropZone) {
+    dropZone.innerHTML = `
+      <div class="drop-icon">
+        <svg width="24" height="24" fill="none" stroke="#f97316" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="16 16 12 12 8 16"/>
+          <line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+      </div>
+      <div class="drop-title">Перетащи файл или кликни</div>
+      <div class="drop-sub">Поддерживаемые форматы</div>
+      <div class="drop-formats">MP3 · WAV · FLAC · AAC · OGG — до 500 MB</div>
+    `;
+  }
+
+  const coverThumb = document.getElementById('cover-thumb');
+  if (coverThumb) {
+    coverThumb.innerHTML = `<span style="font-size:28px;">📷</span>`;
+  }
+}
+
 /* Обновлённая загрузка трека (с обложкой) */
 async function handleTrackUpload() {
   // Защита: проверяем, что модалка открыта и элементы существуют
@@ -340,20 +384,9 @@ async function handleTrackUpload() {
     await apiRequest(`/artists/${trackId}/publish`, 'POST');
 
     showToast('🎵 Трек успешно опубликован!', 'success');
-
+    resetUploadForm();
     // Закрываем модалку и очищаем данные
     closeModal('upload-modal');
-    selectedFile = null;
-    selectedCover = null;
-
-    // --- ОЧИСТКА ПОЛЕЙ ФОРМЫ ---
-    document.getElementById('track-title').value = '';
-    document.getElementById('artist-name').value = '';
-    document.getElementById('track-genre').value = '';
-    document.getElementById('track-tags').value = '';
-    document.getElementById('track-desc').value = '';
-    document.getElementById('track-duration').value = '';
-    document.getElementById('public-toggle').classList.remove('off'); // если используется toggle
 
     // Обновляем список треков в профиле
     if (currentUser) {
