@@ -11,6 +11,17 @@ const handleError = (res, error) => {
 
 const idsEqual = (a, b) => String(a) === String(b);
 
+const requireOwnedArtist = (req, res) => {
+  const artistId = req.params.artistId || req.user?._id;
+
+  if (!artistId || !req.user || !idsEqual(artistId, req.user._id)) {
+    res.status(403).json({ error: 'Access denied' });
+    return null;
+  }
+
+  return artistId;
+};
+
 const toRestRepostResponse = (dto, currentUser) => ({
   id: dto.id,
   type: 'REPOST',
@@ -35,15 +46,10 @@ const toRestRepostResponse = (dto, currentUser) => ({
 
 const createTrack = async (req, res) => {
   try {
-    const { artistId } = req.params;
-    const currentUserId = req.user._id;
-    const data = req.body;
+    const artistId = requireOwnedArtist(req, res);
+    if (!artistId) return;
 
-    if (!idsEqual(artistId, currentUserId)) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const result = await container.createTrack(artistId, data);
+    const result = await container.createTrack(artistId, req.body);
     res.status(201).json(result);
   } catch (error) {
     handleError(res, error);
@@ -55,12 +61,17 @@ const uploadAudio = [
   uploadMiddleware.single('audio'),
   async (req, res) => {
     try {
-      const artistId = req.user._id;
-      const { trackId } = req.params;
-      const fileBuffer = req.file.buffer;
-      const originalFilename = req.file.originalname;
+      const artistId = requireOwnedArtist(req, res);
+      if (!artistId) return;
 
-      const result = await container.uploadAudio(trackId, artistId, fileBuffer, originalFilename);
+      const { trackId } = req.params;
+      const result = await container.uploadAudio(
+        trackId,
+        artistId,
+        req.file.buffer,
+        req.file.originalname
+      );
+
       res.json(result);
     } catch (error) {
       handleError(res, error);
@@ -70,9 +81,10 @@ const uploadAudio = [
 
 const publishTrack = async (req, res) => {
   try {
-    const artistId = req.user._id;
-    const { trackId } = req.params;
+    const artistId = requireOwnedArtist(req, res);
+    if (!artistId) return;
 
+    const { trackId } = req.params;
     const result = await container.publishTrack(trackId, artistId);
     res.json(result);
   } catch (error) {
@@ -82,9 +94,10 @@ const publishTrack = async (req, res) => {
 
 const archiveTrack = async (req, res) => {
   try {
-    const artistId = req.user._id;
-    const { trackId } = req.params;
+    const artistId = requireOwnedArtist(req, res);
+    if (!artistId) return;
 
+    const { trackId } = req.params;
     const result = await container.archiveTrack(trackId, artistId);
     res.json(result);
   } catch (error) {
@@ -94,9 +107,10 @@ const archiveTrack = async (req, res) => {
 
 const deleteTrack = async (req, res) => {
   try {
-    const artistId = req.user._id;
-    const { trackId } = req.params;
+    const artistId = requireOwnedArtist(req, res);
+    if (!artistId) return;
 
+    const { trackId } = req.params;
     const result = await container.deleteTrack(trackId, artistId);
     res.json(result);
   } catch (error) {
@@ -106,7 +120,9 @@ const deleteTrack = async (req, res) => {
 
 const getArtistTracks = async (req, res) => {
   try {
-    const artistId = req.user._id;
+    const artistId = requireOwnedArtist(req, res);
+    if (!artistId) return;
+
     const tracks = await container.getArtistTracks(artistId);
     res.json(tracks);
   } catch (error) {
@@ -116,9 +132,10 @@ const getArtistTracks = async (req, res) => {
 
 const getTrack = async (req, res) => {
   try {
-    const artistId = req.user._id;
-    const { trackId } = req.params;
+    const artistId = requireOwnedArtist(req, res);
+    if (!artistId) return;
 
+    const { trackId } = req.params;
     const track = await container.getTrack(trackId, artistId);
     res.json(track);
   } catch (error) {
@@ -128,11 +145,11 @@ const getTrack = async (req, res) => {
 
 const updateTrackMetadata = async (req, res) => {
   try {
-    const artistId = req.user._id;
-    const { trackId } = req.params;
-    const data = req.body;
+    const artistId = requireOwnedArtist(req, res);
+    if (!artistId) return;
 
-    const result = await container.updateTrackMetadata(trackId, artistId, data);
+    const { trackId } = req.params;
+    const result = await container.updateTrackMetadata(trackId, artistId, req.body);
     res.json(result);
   } catch (error) {
     handleError(res, error);
@@ -175,12 +192,17 @@ const uploadCover = [
   uploadMiddleware.single('cover'),
   async (req, res) => {
     try {
-      const artistId = req.user._id;
-      const { trackId } = req.params;
-      const fileBuffer = req.file.buffer;
-      const originalFilename = req.file.originalname;
+      const artistId = requireOwnedArtist(req, res);
+      if (!artistId) return;
 
-      const result = await container.uploadCover(trackId, artistId, fileBuffer, originalFilename);
+      const { trackId } = req.params;
+      const result = await container.uploadCover(
+        trackId,
+        artistId,
+        req.file.buffer,
+        req.file.originalname
+      );
+
       res.json(result);
     } catch (error) {
       handleError(res, error);
