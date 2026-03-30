@@ -1,11 +1,8 @@
-// backend/usecases/getArtist.js
 'use strict';
 
-const User = require('../models/User');        // ← добавили
-const Track = require('../models/Track');      // для надёжности
+const User = require('../models/User');
 
 function makeGetArtist({ trackRepository }) {
-
   return async function getArtist(artistId) {
     if (!artistId) {
       const err = new Error('artistId обязателен');
@@ -13,7 +10,6 @@ function makeGetArtist({ trackRepository }) {
       throw err;
     }
 
-    // Получаем реального пользователя
     const artistUser = await User.findById(artistId)
       .select('username avatar bio')
       .lean();
@@ -24,18 +20,20 @@ function makeGetArtist({ trackRepository }) {
       throw err;
     }
 
-    // Получаем все треки артиста
     const tracks = await trackRepository.findAllByArtist(artistId);
 
-    // Фильтруем только публичные треки
     const publicTracks = tracks.filter(track =>
-        track.isPublic !== false && track.status === 'PUBLISHED'
+      track.isPublic !== false && track.status === 'PUBLISHED'
     );
+
+    const displayArtistName =
+      publicTracks.find(track => track.artistName && track.artistName.trim())?.artistName
+      || artistUser.username;
 
     return {
       id: String(artistId),
-      username: artistUser.username,                    // настоящее имя пользователя
-      name: artistUser.username,                        // для отображения как "Имя артиста"
+      username: artistUser.username,     // хэндл профиля
+      name: artistUser.username,           // сценическое имя
       avatar: artistUser.avatar,
       bio: artistUser.bio || "Артист платформы OtlichnikMusic",
 
@@ -49,7 +47,8 @@ function makeGetArtist({ trackRepository }) {
         audioUrl: track.audioUrl,
         coverUrl: track.coverUrl,
         plays: track.plays || 0,
-        artistName: artistUser.username                   // правильное имя артиста в треках
+        artistName: track.artistName || artistUser.username, // сценическое имя в карточке трека
+        artistUsername: artistUser.username                  // username, если нужен отдельно
       })),
       totalSongs: publicTracks.length
     };

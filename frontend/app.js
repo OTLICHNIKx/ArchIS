@@ -207,7 +207,6 @@ function initUploadModal() {
 }
 
 /* Автоподхват метаданных + имя артиста */
-/* Автоподхват метаданных + имя артиста */
 function handleFile(file) {
   if (!file.type.startsWith('audio/')) {
     return showToast('Только аудиофайлы!', 'error');
@@ -220,9 +219,7 @@ function handleFile(file) {
 
   // Автоподстановка имени артиста
   const artistInput = document.getElementById('artist-name');
-  if (currentUser && currentUser.username && artistInput) {
-    artistInput.value = currentUser.username;
-  }
+  if (artistInput && !artistInput.value.trim()) artistInput.value = currentUser.username;
 
   // === БЕЗОПАСНОЕ ПОЛУЧЕНИЕ ДЛИТЕЛЬНОСТИ ===
   const audio = new Audio();
@@ -256,7 +253,50 @@ function handleFile(file) {
   }
 }
 
-/* Обновлённая загрузка трека (с обложкой) */
+function resetUploadForm() {
+  selectedFile = null;
+  selectedCover = null;
+  window.selectedTrackDuration = 0;
+
+  document.getElementById('track-title').value = '';
+  document.getElementById('artist-name').value = '';
+  document.getElementById('track-genre').value = '';
+  document.getElementById('track-tags').value = '';
+  document.getElementById('track-desc').value = '';
+
+  const durationEl = document.getElementById('track-duration');
+  if (durationEl) durationEl.value = '';
+
+  document.getElementById('public-toggle')?.classList.remove('off');
+
+  const audioFileInput = document.getElementById('audio-file');
+  if (audioFileInput) audioFileInput.value = '';
+
+  const coverFileInput = document.getElementById('cover-file');
+  if (coverFileInput) coverFileInput.value = '';
+
+  const dropZone = document.getElementById('drop-zone');
+  if (dropZone) {
+    dropZone.innerHTML = `
+      <div class="drop-icon">
+        <svg width="24" height="24" fill="none" stroke="#f97316" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="16 16 12 12 8 16"/>
+          <line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+      </div>
+      <div class="drop-title">Перетащи файл или кликни</div>
+      <div class="drop-sub">Поддерживаемые форматы</div>
+      <div class="drop-formats">MP3 · WAV · FLAC · AAC · OGG — до 500 MB</div>
+    `;
+  }
+
+  const coverThumb = document.getElementById('cover-thumb');
+  if (coverThumb) {
+    coverThumb.innerHTML = `<span style="font-size:28px;">📷</span>`;
+  }
+}
+
 /* Обновлённая загрузка трека (с обложкой) */
 async function handleTrackUpload() {
   // Защита: проверяем, что модалка открыта и элементы существуют
@@ -270,7 +310,13 @@ async function handleTrackUpload() {
   }
 
   const title       = titleInput.value.trim();
-  const artistName  = document.getElementById('artist-name')?.value.trim() || currentUser.username;
+  const artistNameInput = document.getElementById('artist-name')?.value.trim();
+  const artistName = artistNameInput && artistNameInput.length > 0
+      ? artistNameInput
+      : currentUser.username;
+  const artistNameToSend = artistNameInput && artistNameInput.trim() !== currentUser.username
+      ? artistNameInput
+      : undefined;
   const genre       = document.getElementById('track-genre')?.value || '';
   const tagsInput   = document.getElementById('track-tags')?.value || '';
   const description = document.getElementById('track-desc')?.value.trim() || '';
@@ -338,11 +384,9 @@ async function handleTrackUpload() {
     await apiRequest(`/artists/${trackId}/publish`, 'POST');
 
     showToast('🎵 Трек успешно опубликован!', 'success');
-
+    resetUploadForm();
     // Закрываем модалку и очищаем данные
     closeModal('upload-modal');
-    selectedFile = null;
-    selectedCover = null;
 
     // Обновляем список треков в профиле
     if (currentUser) {
@@ -387,19 +431,24 @@ function updateTopbarAuth() {
 function renderProfileHeader() {
   if (!currentUser) return;
 
-  // Защита от null
   const nameEl = document.getElementById('profile-name');
   const handleEl = document.getElementById('profile-handle');
   const avatarEl = document.getElementById('profile-avatar');
   const avatarTop = document.getElementById('profile-avatar-top');
 
-  if (nameEl) nameEl.textContent = currentUser.username || 'Пользователь';
+  const displayName = currentUser.username || 'Пользователь';
+  const username = currentUser.username || 'user';
+
+  if (nameEl) nameEl.textContent = displayName;
   if (handleEl) handleEl.innerHTML = `
-    @${(currentUser.username || 'user').replace(/^@/, '')}
+    @${username.replace(/^@/, '')}
     <span style="color:var(--text3)">· Москва, RU</span>
   `;
-  if (avatarEl) avatarEl.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
-  if (avatarTop) avatarTop.textContent = currentUser.username?.[0]?.toUpperCase() || 'U';
+
+  const avatarLetter = (displayName?.[0] || username?.[0] || 'U').toUpperCase();
+
+  if (avatarEl) avatarEl.textContent = avatarLetter;
+  if (avatarTop) avatarTop.textContent = avatarLetter;
 
   const actions = document.getElementById('profile-actions');
   if (actions) {
@@ -502,55 +551,68 @@ async function renderProfileTracks() {
   if (!container || !currentUser) return;
 
   try {
-    const tracks = await apiRequest('/artists/tracks');
+    const items = await apiRequest('/profile/feed');
+    const displayName = currentUser.username;
+    const username = currentUser.username; // реальный username всегда отдельно
+
+    renderProfileHeader();
+
+    const statTracks = document.getElementById('stat-tracks');
+    if (statTracks) {
+      statTracks.textContent = items.length;
+    }
 
     const PLAY_ICON = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
-    container.innerHTML = tracks.map(t => {
-     // Если есть обложка — используем её, иначе градиент
-    const coverStyle = t.coverUrl
-      ? `background-image: url('http://localhost:5000${t.coverUrl}'); background-size: cover; background-position: center;`
-      : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
+    container.innerHTML = items.map(t => {
+      const coverStyle = t.coverUrl
+        ? `background-image: url('http://localhost:5000${t.coverUrl}'); background-size: cover; background-position: center;`
+        : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
+
+      const metaLine = t.type === 'REPOST' && t.source
+          ? `${t.artistName || t.source.artistName} · взято у <button class="source-link" onclick="viewArtistProfile('${t.source.artistId}')">${t.source.username}</button>`
+          : `${t.artistName || currentUser.username}`;
 
       return `
         <div class="profile-track">
           <div
-              class="pt-cover trending-cover track-cover-interactive"
-              style="${coverStyle}"
-              onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
+            class="pt-cover trending-cover track-cover-interactive"
+            style="${coverStyle}"
+            onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
+          >
+            <div
+              class="track-overlay"
+              data-track-play="1"
+              data-track-json='${JSON.stringify(t).replace(/'/g, "&apos;")}'
             >
-              <div
-                class="track-overlay"
-                data-track-play="1"
-                data-track-json='${JSON.stringify(t).replace(/'/g, "&apos;")}'
-              >
-                ${getTrackButtonIcon(t)}
-              </div>
+              ${getTrackButtonIcon(t)}
             </div>
+          </div>
 
           <div class="pt-info">
             <div class="pt-title">${t.title}</div>
-            <div class="pt-date">${t.artistName || currentUser.username}</div>
+            <div class="pt-date">${metaLine}</div>
           </div>
 
           <div class="pt-wave">
-            ${Array.from({length: 24}, () =>
-              `<div class="ptb" style="height:${4 + Math.random()*22}px"></div>`
+            ${Array.from({ length: 24 }, () =>
+              `<div class="ptb" style="height:${4 + Math.random() * 22}px"></div>`
             ).join('')}
           </div>
 
-          <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
+          <div class="pt-plays">${PLAY_ICON} ${t.plays || 0}</div>
           <div class="pt-duration">
-            ${t.duration ? Math.floor(t.duration/60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '0:00'}
+            ${t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '0:00'}
           </div>
         </div>
       `;
     }).join('');
+
     refreshTrackPlayStates();
 
   } catch (e) {
-    console.log('Нет треков или ошибка загрузки');
-    container.innerHTML = `<div style="padding:20px;color:var(--text2);text-align:center;">Пока нет треков</div>`;
+    console.error('Ошибка загрузки profile feed:', e);
+    container.innerHTML = `<div style="padding:20px;color:var(--text2);text-align:center;">Пока нет треков и репостов</div>`;
   }
 }
 
@@ -838,8 +900,8 @@ async function renderArtistProfile(artistId) {
         : `background:linear-gradient(135deg,#7c3aed,#f97316);`;
 
       return `
-        <div class="profile-track">
-          <div
+          <div class="profile-track">
+            <div
               class="pt-cover trending-cover track-cover-interactive"
               style="${coverStyle}"
               onclick='toggleTrack(${JSON.stringify(t).replace(/"/g, "&quot;")})'
@@ -852,20 +914,46 @@ async function renderArtistProfile(artistId) {
                 ${getTrackButtonIcon(t)}
               </div>
             </div>
-          <div class="pt-info">
-            <div class="pt-title">${t.title}</div>
-            <div class="pt-date">${t.artistName}</div>
+
+            <div class="pt-info">
+              <div class="pt-title">${t.title}</div>
+              <div class="pt-date">${t.artistName}</div>
+            </div>
+
+            ${
+              currentUser && String(currentUser._id) !== String(artistId)
+                ? `<button class="btn btn-ghost track-repost-btn" onclick="event.stopPropagation(); repostTrack('${t.id}')">Репост</button>`
+                : ``
+            }
+
+            <div class="pt-plays">${PLAY_ICON} ${t.plays || 0}</div>
+            <div class="pt-duration">${Math.floor(t.duration/60)}:${(t.duration%60).toString().padStart(2,'0')}</div>
           </div>
-          <div class="pt-plays">${PLAY_ICON} ${t.plays || '0K'}</div>
-          <div class="pt-duration">${Math.floor(t.duration/60)}:${(t.duration%60).toString().padStart(2,'0')}</div>
-        </div>
-      `;
+        `;
     }).join('');
     refreshTrackPlayStates();
 
   } catch (e) {
     console.error(e);
     content.innerHTML = `<div style="padding:40px;color:var(--text2);text-align:center;">Артист не найден</div>`;
+  }
+}
+
+async function repostTrack(trackId) {
+  if (!currentUser) {
+    return showToast('Сначала войди в аккаунт!', 'error');
+  }
+
+  try {
+    await apiRequest(`/tracks/${trackId}/repost`, 'POST');
+    showToast('Трек добавлен в ваш профиль', 'success');
+
+    if (document.getElementById('page-profile')?.classList.contains('active')) {
+      await renderProfileTracks();
+    }
+  } catch (err) {
+    console.error('Repost error:', err);
+    showToast(err.message || 'Не удалось репостнуть трек', 'error');
   }
 }
 
@@ -877,6 +965,7 @@ window.logout = logout;
 window.toggleTrack = toggleTrack;
 window.toggleCurrentTrack = toggleCurrentTrack;
 window.stopTrack = stopTrack;
+window.repostTrack = repostTrack;
 
 window.openAuthWithReset = () => {
   document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));

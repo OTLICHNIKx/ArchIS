@@ -14,6 +14,7 @@ const trackSchema = new mongoose.Schema({
   duration:     { type: Number, default: 0 },
   isPublic:     { type: Boolean, default: true },
   plays:        { type: Number, default: 0 },
+  repostCount: { type: Number, default: 0 },
   status: {
     type:    String,
     enum:    Object.values(TrackStatus),
