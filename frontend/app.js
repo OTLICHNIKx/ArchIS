@@ -31,7 +31,6 @@ let audioPlayer = null;
 let currentPlayingTrack = null;
 let currentArtistProfileId = null;
 let isPlaying = false;
-let currentArtistDisplayName = null;
 
 /* ──────────────────────────────────────────────
    ЗАГРУЗКА ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (главное исправление)
@@ -208,7 +207,6 @@ function initUploadModal() {
 }
 
 /* Автоподхват метаданных + имя артиста */
-/* Автоподхват метаданных + имя артиста */
 function handleFile(file) {
   if (!file.type.startsWith('audio/')) {
     return showToast('Только аудиофайлы!', 'error');
@@ -221,9 +219,7 @@ function handleFile(file) {
 
   // Автоподстановка имени артиста
   const artistInput = document.getElementById('artist-name');
-  if (currentUser && currentUser.username && artistInput) {
-    artistInput.value = currentUser.username;
-  }
+  if (artistInput && !artistInput.value.trim()) artistInput.value = currentUser.username;
 
   // === БЕЗОПАСНОЕ ПОЛУЧЕНИЕ ДЛИТЕЛЬНОСТИ ===
   const audio = new Audio();
@@ -258,7 +254,6 @@ function handleFile(file) {
 }
 
 /* Обновлённая загрузка трека (с обложкой) */
-/* Обновлённая загрузка трека (с обложкой) */
 async function handleTrackUpload() {
   // Защита: проверяем, что модалка открыта и элементы существуют
   const titleInput = document.getElementById('track-title');
@@ -271,7 +266,13 @@ async function handleTrackUpload() {
   }
 
   const title       = titleInput.value.trim();
-  const artistName  = document.getElementById('artist-name')?.value.trim() || currentUser.username;
+  const artistNameInput = document.getElementById('artist-name')?.value.trim();
+  const artistName = artistNameInput && artistNameInput.length > 0
+      ? artistNameInput
+      : currentUser.username;
+  const artistNameToSend = artistNameInput && artistNameInput.trim() !== currentUser.username
+      ? artistNameInput
+      : undefined;
   const genre       = document.getElementById('track-genre')?.value || '';
   const tagsInput   = document.getElementById('track-tags')?.value || '';
   const description = document.getElementById('track-desc')?.value.trim() || '';
@@ -345,6 +346,15 @@ async function handleTrackUpload() {
     selectedFile = null;
     selectedCover = null;
 
+    // --- ОЧИСТКА ПОЛЕЙ ФОРМЫ ---
+    document.getElementById('track-title').value = '';
+    document.getElementById('artist-name').value = '';
+    document.getElementById('track-genre').value = '';
+    document.getElementById('track-tags').value = '';
+    document.getElementById('track-desc').value = '';
+    document.getElementById('track-duration').value = '';
+    document.getElementById('public-toggle').classList.remove('off'); // если используется toggle
+
     // Обновляем список треков в профиле
     if (currentUser) {
       renderProfileTracks();
@@ -393,7 +403,7 @@ function renderProfileHeader() {
   const avatarEl = document.getElementById('profile-avatar');
   const avatarTop = document.getElementById('profile-avatar-top');
 
-  const displayName = currentArtistDisplayName || currentUser.username || 'Пользователь';
+  const displayName = currentUser.username || 'Пользователь';
   const username = currentUser.username || 'user';
 
   if (nameEl) nameEl.textContent = displayName;
@@ -509,9 +519,8 @@ async function renderProfileTracks() {
 
   try {
     const items = await apiRequest('/profile/feed');
-    currentArtistDisplayName =
-      items.find(t => t.type !== 'REPOST' && t.artistName && t.artistName.trim())?.artistName
-      || currentUser.username;
+    const displayName = currentUser.username;
+    const username = currentUser.username; // реальный username всегда отдельно
 
     renderProfileHeader();
 
@@ -528,7 +537,7 @@ async function renderProfileTracks() {
         : `background: linear-gradient(135deg, #7c3aed, #f97316);`;
 
       const metaLine = t.type === 'REPOST' && t.source
-          ? `${t.artistName || 'Unknown artist'} · взято у <button class="source-link" onclick="event.stopPropagation(); viewArtistProfile('${t.source.artistId}')">${t.source.username || t.source.artistName}</button>`
+          ? `${t.artistName || t.source.artistName} · взято у <button class="source-link" onclick="viewArtistProfile('${t.source.artistId}')">${t.source.username}</button>`
           : `${t.artistName || currentUser.username}`;
 
       return `

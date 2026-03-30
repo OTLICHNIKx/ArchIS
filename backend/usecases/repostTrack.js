@@ -13,10 +13,7 @@ function extractArtistId(track) {
 
 function extractArtistName(track) {
   if (!track) return 'Unknown artist';
-  if (track.artistName) return track.artistName;
-  if (track.artistId && typeof track.artistId === 'object' && track.artistId.username) {
-    return track.artistId.username;
-  }
+  if (track.artistName && track.artistName.trim()) return track.artistName;
   return 'Unknown artist';
 }
 

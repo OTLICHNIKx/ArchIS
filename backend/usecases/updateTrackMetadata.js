@@ -25,6 +25,13 @@ function makeUpdateTrackMetadata({ trackRepository }) {
       duration:    data.duration    ?? track.duration,
     };
 
+    if ('artistName' in data) {
+      if (!data.artistName || data.artistName.trim() === '') {
+        // Если поле пустое, удаляем его из объекта, чтобы не менять artistName
+        delete data.artistName;
+      }
+    }
+
     const errors = validateTrackMetadata(toValidate);
     if (errors.length > 0) {
       const err = new Error(errors.join(', '));

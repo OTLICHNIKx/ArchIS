@@ -36,8 +36,9 @@ function normalizeRepost(repost) {
     plays: track.plays || 0,
     repostCount: track.repostCount || 0,
     source: {
-      artistId: String(repost.originalArtistId),
+      artistId: repost.originalArtistId,
       artistName: repost.originalArtistName,
+      username: originalArtist.username,
     },
     createdAt: repost.createdAt || repost.timestamp,
   };

@@ -33,7 +33,7 @@ function makeGetArtist({ trackRepository }) {
     return {
       id: String(artistId),
       username: artistUser.username,     // хэндл профиля
-      name: displayArtistName,           // сценическое имя
+      name: artistUser.username,           // сценическое имя
       avatar: artistUser.avatar,
       bio: artistUser.bio || "Артист платформы OtlichnikMusic",
 
@@ -47,8 +47,8 @@ function makeGetArtist({ trackRepository }) {
         audioUrl: track.audioUrl,
         coverUrl: track.coverUrl,
         plays: track.plays || 0,
-        artistName: track.artistName || displayArtistName, // сценическое имя в карточке трека
-        artistUsername: artistUser.username                // username, если нужен отдельно
+        artistName: track.artistName || artistUser.username, // сценическое имя в карточке трека
+        artistUsername: artistUser.username                  // username, если нужен отдельно
       })),
       totalSongs: publicTracks.length
     };
