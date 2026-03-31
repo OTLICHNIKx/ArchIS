@@ -1,6 +1,6 @@
 // usecases/getArtistTracks.js
 // Сценарий: Получить все треки артиста
-// GET /artists/tracks
+// GET /artists/{artist_id}/tracks
 
 'use strict';
 

@@ -14,28 +14,31 @@ const {
   updateTrackMetadata,
   getPopularTags,
   getArtist,
-  RepostTrack,
+  repostTrack,
   searchUsers,
   getProfileFeed
 } = require('../adapters/http/trackHandlers');
 
 const { protect } = require('../middleware/auth');
 
-// === ЭНДПОИНТЫ ===
-router.post('/artists/:artistId/tracks', protect, createTrack);          // 1. Создать метаданные
-router.post('/artists/:trackId/audio', uploadAudio);                     // 2. Загрузить аудио
-router.post('/artists/:trackId/cover', uploadCover);
-router.post('/artists/:trackId/publish', protect, publishTrack);         // 3. Опубликовать
-router.post('/artists/:trackId/archive', protect, archiveTrack);         // 4. Архивировать
-router.delete('/artists/tracks/:trackId', protect, deleteTrack);         // 5. Удалить
-router.get('/artists/tracks', protect, getArtistTracks);                 // 6. Все треки артиста
-router.get('/artists/tracks/:trackId', protect, getTrack);               // 7. Один трек
-router.patch('/artists/tracks/:trackId', protect, updateTrackMetadata);  // 8. Обновить метаданные
-router.get('/tags/popular', getPopularTags);                             // 9. Популярные теги
-router.get('/search/users', searchUsers);                                // ←←← новый публичный маршрут
-router.get('/artists/:artistId', getArtist);                             // 10.Получить карточку артиста (публичный эндпоинт)
-router.post('/tracks/:trackId/repost', protect, RepostTrack);            // 11.Репост трека (требует авторизации)
-router.get('/profile/feed', protect, getProfileFeed);
+// === canonical REST routes for the report ===
+router.post('/artists/:artistId/tracks', protect, createTrack);
+router.get('/artists/:artistId/tracks', protect, getArtistTracks);
+router.get('/artists/:artistId/tracks/:trackId', protect, getTrack);
+router.patch('/artists/:artistId/tracks/:trackId', protect, updateTrackMetadata);
+router.delete('/artists/:artistId/tracks/:trackId', protect, deleteTrack);
 
+router.post('/artists/:artistId/tracks/:trackId/audio', uploadAudio);
+router.post('/artists/:artistId/tracks/:trackId/cover', uploadCover);
+router.post('/artists/:artistId/tracks/:trackId/publish', protect, publishTrack);
+router.post('/artists/:artistId/tracks/:trackId/archive', protect, archiveTrack);
+
+// public/supporting endpoints
+router.get('/tags/popular', getPopularTags);
+router.get('/artists/:artistId', getArtist);
+
+router.get('/search/users', searchUsers);
+router.post('/tracks/:trackId/repost', protect, repostTrack);
+router.get('/profile/feed', protect, getProfileFeed);
 
 module.exports = router;

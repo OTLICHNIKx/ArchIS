@@ -1,6 +1,6 @@
 // usecases/archiveTrack.js
-// Сценарий: Скрыть трек
-// POST /artists/{track_id}/archive
+// Сценарий: Архивировать трек
+// POST /artists/{artist_id}/tracks/{track_id}/archive
 
 'use strict';
 

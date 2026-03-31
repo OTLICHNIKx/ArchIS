@@ -1,6 +1,6 @@
 // usecases/uploadAudio.js
 // Сценарий: Загрузить аудиофайл для трека
-// POST /artists/{track_id}/audio
+// POST /artists/{artist_id}/tracks/{track_id}/audio
 
 'use strict';
 

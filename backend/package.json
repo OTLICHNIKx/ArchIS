@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "smoke:rest": "node scripts/smoke_rest_workflow.js",
+    "smoke:gql": "node scripts/smoke_graphql_repost.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -355,33 +355,48 @@ async function handleTrackUpload() {
     const trackId = trackResponse.track_id || trackResponse._id || trackResponse.id;
     if (!trackId) throw new Error('Не удалось получить ID трека');
 
+    const artistId = currentUser._id;
+
     // 2. Загружаем аудио
     const audioForm = new FormData();
     audioForm.append('audio', selectedFile);
-    const audioRes = await fetch(`${API_URL}/artists/${trackId}/audio`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      body: audioForm
-    });
+
+    const audioRes = await fetch(
+      `${API_URL}/artists/${artistId}/tracks/${trackId}/audio`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: audioForm
+      }
+    );
 
     if (!audioRes.ok) {
       const errData = await audioRes.json();
-      throw new Error(errData.message || 'Ошибка загрузки аудио');
+      throw new Error(errData.message || errData.error || 'Ошибка загрузки аудио');
     }
 
     // 3. Загружаем обложку (если выбрана)
     if (selectedCover) {
       const coverForm = new FormData();
       coverForm.append('cover', selectedCover);
-      await fetch(`${API_URL}/artists/${trackId}/cover`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: coverForm
-      });
+
+      const coverRes = await fetch(
+        `${API_URL}/artists/${artistId}/tracks/${trackId}/cover`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          body: coverForm
+        }
+      );
+
+      if (!coverRes.ok) {
+        const errData = await coverRes.json();
+        throw new Error(errData.message || errData.error || 'Ошибка загрузки обложки');
+      }
     }
 
     // 4. Публикуем трек
-    await apiRequest(`/artists/${trackId}/publish`, 'POST');
+    await apiRequest(`/artists/${artistId}/tracks/${trackId}/publish`, 'POST');
 
     showToast('🎵 Трек успешно опубликован!', 'success');
     resetUploadForm();

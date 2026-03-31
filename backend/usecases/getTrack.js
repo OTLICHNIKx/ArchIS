@@ -1,6 +1,6 @@
 // usecases/getTrack.js
-// Сценарий: Получить конкретный трек
-// GET /artists/tracks/{track_id}
+// Сценарий: Получить конкретный трек артиста
+// GET /artists/{artist_id}/tracks/{track_id}
 
 'use strict';
 

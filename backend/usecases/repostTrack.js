@@ -1,3 +1,4 @@
+// backend/usecases/repostTrack.js
 'use strict';
 
 const { validateRepost } = require('../domain/Repost');
@@ -70,22 +71,26 @@ function makeRepostTrack({ trackRepository, repostRepository, notificationServic
       await notificationService.sendRepostNotification(userId, track).catch(console.error);
     }
 
+    const timestamp = new Date(
+      repost.createdAt || repost.timestamp || new Date()
+    ).toISOString();
+
     return {
-      id: repost._id || repost.id,
-      type: 'REPOST',
-      originalTrackId: String(track._id || songId),
-      title: track.title,
-      audioUrl: track.audioUrl,
-      coverUrl: track.coverUrl,
-      duration: track.duration || 0,
-      plays: track.plays || 0,
-      repostCount: newRepostCount,
-      artistName: originalArtistName,
-      source: {
-        artistId: String(originalArtistId),
-        artistName: originalArtistName,
+      id: String(repost._id || repost.id),
+      song: {
+        id: String(track._id || songId),
+        title: track.title,
+        repostCount: newRepostCount,
       },
-      createdAt: repost.createdAt || repost.timestamp || new Date().toISOString(),
+      timestamp,
+      meta: {
+        audioUrl: track.audioUrl,
+        coverUrl: track.coverUrl,
+        duration: track.duration || 0,
+        plays: track.plays || 0,
+        originalArtistId: String(originalArtistId),
+        originalArtistName,
+      }
     };
   };
 }
