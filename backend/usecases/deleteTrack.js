@@ -1,6 +1,6 @@
 // usecases/deleteTrack.js
 // Сценарий: Удалить трек
-// DELETE /artists/tracks/{track_id}
+// DELETE /artists/{artist_id}/tracks/{track_id}
 
 'use strict';
 

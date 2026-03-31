@@ -14,7 +14,7 @@ const {
   updateTrackMetadata,
   getPopularTags,
   getArtist,
-  RepostTrack,
+  repostTrack,
   searchUsers,
   getProfileFeed
 } = require('../adapters/http/trackHandlers');
@@ -38,7 +38,7 @@ router.get('/tags/popular', getPopularTags);
 router.get('/artists/:artistId', getArtist);
 
 router.get('/search/users', searchUsers);
-router.post('/tracks/:trackId/repost', protect, RepostTrack);
+router.post('/tracks/:trackId/repost', protect, repostTrack);
 router.get('/profile/feed', protect, getProfileFeed);
 
 module.exports = router;

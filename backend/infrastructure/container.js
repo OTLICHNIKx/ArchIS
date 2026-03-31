@@ -45,7 +45,7 @@ const container = {
   uploadAudio: makeUploadAudio({ trackRepository, fileStorage }),
   uploadCover: makeUploadCover({ trackRepository, fileStorage }),
 
-  RepostTrack: makeRepostTrack({ trackRepository, repostRepository, notificationService }),
+  repostTrack: makeRepostTrack({ trackRepository, repostRepository, notificationService }),
   getArtist: makeGetArtist({ trackRepository, userRepository }),
   searchUsers: makeSearchUsers({ userRepository }),
   getProfileFeed: makeGetProfileFeed({ trackRepository, repostRepository }),

@@ -175,12 +175,12 @@ const getArtist = async (req, res) => {
   }
 };
 
-const RepostTrack = async (req, res) => {
+const repostTrack = async (req, res) => {
   try {
     const userId = req.user._id;
     const { trackId } = req.params;
 
-    const dto = await container.RepostTrack(trackId, userId);
+    const dto = await container.repostTrack(trackId, userId);
     res.status(201).json(toRestRepostResponse(dto, req.user));
   } catch (error) {
     handleError(res, error);
@@ -241,7 +241,7 @@ module.exports = {
   updateTrackMetadata,
   getPopularTags,
   getArtist,
-  RepostTrack,
+  repostTrack,
   uploadCover,
   searchUsers,
   getProfileFeed,

@@ -1,6 +1,6 @@
 // backend/usecases/uploadCover.js
 // Сценарий: Загрузить обложку для трека
-// POST /artists/{track_id}/cover
+// POST /artists/{artist_id}/tracks/{track_id}/cover
 
 'use strict';
 

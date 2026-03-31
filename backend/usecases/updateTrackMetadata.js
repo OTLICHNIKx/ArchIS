@@ -1,6 +1,6 @@
 // usecases/updateTrackMetadata.js
 // Сценарий: Обновить метаданные трека
-// PATCH /artists/tracks/{track_id}
+// PATCH /artists/{artist_id}/tracks/{track_id}
 
 'use strict';
 
