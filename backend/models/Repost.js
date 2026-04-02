@@ -4,7 +4,6 @@ const repostSchema = new mongoose.Schema({
   songId: { type: mongoose.Schema.Types.ObjectId, ref: 'Track', required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  // источник репоста
   originalArtistId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   originalArtistName: { type: String, required: true, trim: true },
 

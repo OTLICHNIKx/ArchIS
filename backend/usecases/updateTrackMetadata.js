@@ -16,7 +16,6 @@ function makeUpdateTrackMetadata({ trackRepository }) {
       throw err;
     }
 
-    // Валидируем только переданные поля
     const toValidate = {
       title:       data.title       ?? track.title,
       genre:       data.genre       ?? track.genre,
@@ -27,7 +26,6 @@ function makeUpdateTrackMetadata({ trackRepository }) {
 
     if ('artistName' in data) {
       if (!data.artistName || data.artistName.trim() === '') {
-        // Если поле пустое, удаляем его из объекта, чтобы не менять artistName
         delete data.artistName;
       }
     }

@@ -7,7 +7,6 @@
 function makeUploadAudio({ trackRepository, fileStorage }) {
 
   return async function uploadAudio(trackId, artistId, fileBuffer, originalFilename) {
-    // 1. Проверяем, что трек принадлежит артисту
     const track = await trackRepository.findByIdAndArtist(trackId, artistId);
     if (!track) {
       const err = new Error('Трек не найден');
@@ -15,10 +14,8 @@ function makeUploadAudio({ trackRepository, fileStorage }) {
       throw err;
     }
 
-    // 2. Сохраняем файл через порт (LocalFileStorage)
     const audioUrl = await fileStorage.saveAudio(trackId, fileBuffer, originalFilename);
 
-    // 3. Обновляем трек в БД
     const updated = await trackRepository.update(trackId, { audioUrl });
 
     return {

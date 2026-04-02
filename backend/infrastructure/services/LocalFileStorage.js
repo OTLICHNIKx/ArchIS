@@ -1,5 +1,4 @@
 // infrastructure/services/LocalFileStorage.js
-// Реализация IFileStorage — сохраняет файлы локально
 
 'use strict';
 

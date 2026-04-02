@@ -1,4 +1,5 @@
 // backend/models/Tag.js
+
 const mongoose = require('mongoose');
 
 const tagSchema = new mongoose.Schema({

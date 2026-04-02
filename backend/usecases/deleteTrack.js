@@ -22,7 +22,6 @@ function makeDeleteTrack({ trackRepository, fileStorage }) {
       throw err;
     }
 
-    // Удаляем файлы и запись в БД
     await fileStorage.deleteTrackFiles(trackId);
     await trackRepository.delete(trackId);
 

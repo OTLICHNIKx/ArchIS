@@ -1,12 +1,9 @@
 // domain/Tag.js
-// Сущность тега
 
 'use strict';
 
-/* ─── Бизнес-правило: максимум тегов на трек ─── */
 const MAX_TAGS_PER_TRACK = 20;
 
-/* ─── Бизнес-правило: валидация тега ─── */
 function validateTag(tag) {
   const errors = [];
 
@@ -19,7 +16,6 @@ function validateTag(tag) {
   if (tag && !/^[a-zA-Zа-яА-Я0-9\-_]+$/.test(tag)) {
     errors.push('Тег может содержать только буквы, цифры, дефис и подчёркивание');
   }
-
   return errors;
 }
 

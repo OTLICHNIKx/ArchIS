@@ -1,6 +1,4 @@
 // infrastructure/services/MockAudioService.js
-// Заглушка внешнего сервиса обработки аудио
-// В реальной системе здесь был бы вызов внешнего API
 
 'use strict';
 
@@ -13,8 +11,6 @@ class MockAudioService extends IAudioService {
 
     // Симулируем задержку обработки
     await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Всегда возвращаем успех (в реальности — вызов внешнего API)
     return { success: true };
   }
 }

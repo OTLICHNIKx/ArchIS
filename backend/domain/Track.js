@@ -1,9 +1,7 @@
 // domain/Track.js
-// Сущность трека — чистая бизнес-логика, без зависимостей от БД или фреймворков
 
 'use strict';
 
-/* ─── Допустимые статусы трека ─── */
 const TrackStatus = {
   DRAFT:      'DRAFT',       // метаданные созданы, аудио не загружено
   PROCESSING: 'PROCESSING',  // аудио загружено, обрабатывается
@@ -12,13 +10,11 @@ const TrackStatus = {
   ARCHIVED:   'ARCHIVED',    // трек скрыт артистом
 };
 
-/* ─── Допустимые жанры ─── */
 const ALLOWED_GENRES = [
   'Electronic', 'House', 'Techno', 'Ambient',
   'Hip-Hop', 'Lo-Fi', 'Pop', 'Rock', 'Jazz', 'Other',
 ];
 
-/* ─── Бизнес-правила валидации метаданных ─── */
 function validateTrackMetadata({ title, genre, tags, description, duration }) {
   const errors = [];
 
@@ -41,8 +37,6 @@ function validateTrackMetadata({ title, genre, tags, description, duration }) {
     errors.push('Описание не может быть длиннее 1000 символов');
   }
 
-  // Длительность больше НЕ обязательна при создании метаданных
-  // (будет заполнена позже при загрузке аудио или оставлена 0)
   if (duration !== undefined && duration !== null && duration < 0) {
      errors.push('Длительность не может быть отрицательной');
   }
@@ -50,18 +44,15 @@ function validateTrackMetadata({ title, genre, tags, description, duration }) {
   return errors;
 }
 
-/* ─── Бизнес-правило: можно ли публиковать трек ─── */
 function canPublish(track) {
   return track.status === TrackStatus.PROCESSING ||
          track.status === TrackStatus.DRAFT;
 }
 
-/* ─── Бизнес-правило: можно ли архивировать трек ─── */
 function canArchive(track) {
   return track.status === TrackStatus.PUBLISHED;
 }
 
-/* ─── Бизнес-правило: можно ли удалить трек ─── */
 function canDelete(track) {
   return track.status !== TrackStatus.PROCESSING;
 }

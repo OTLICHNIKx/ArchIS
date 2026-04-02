@@ -244,8 +244,6 @@ async function main() {
       token: listenerToken,
     });
 
-    // Для GraphQL бизнес-ошибка может прийти как 200 с errors,
-    // а может как 400 с errors — оба варианта для нашего теста допустимы.
     assert(
       repostTwice.status === 200 || repostTwice.status === 400,
       `Ожидался HTTP 200 или 400 при повторном репосте, получено: ${repostTwice.status}`

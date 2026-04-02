@@ -60,7 +60,6 @@ const resolvers = {
           };
         }
 
-        // fallback, если в контейнере ещё старое имя
         const dto = await container.RepostTrack(songId, userId);
         return {
           id: dto.id,

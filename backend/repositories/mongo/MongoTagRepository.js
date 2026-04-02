@@ -16,7 +16,6 @@ class MongoTagRepository extends ITagRepository {
   }
 
   async incrementUsage(tags) {
-    // Увеличиваем счётчик для каждого тега, создаём если не существует
     const ops = tags.map(tag => ({
       updateOne: {
         filter: { name: tag.toLowerCase() },

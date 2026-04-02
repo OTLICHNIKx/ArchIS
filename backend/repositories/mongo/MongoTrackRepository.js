@@ -39,7 +39,7 @@ class MongoTrackRepository extends ITrackRepository {
     const track = await TrackModel.findByIdAndUpdate(
       trackId,
       { $set: updateData },
-      { new: true }          // вернуть обновлённый документ
+      { new: true }
     ).lean();
     return track;
   }
